@@ -1,22 +1,24 @@
 package interfaces
 
 import (
+	"fmt"
 	"food-app/application"
 	"food-app/domain/entity"
 	"food-app/infrastructure/auth"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-//Users struct defines the dependencies that will be used
+// Users struct defines the dependencies that will be used
 type Users struct {
 	us application.UserAppInterface
 	rd auth.AuthInterface
 	tk auth.TokenInterface
 }
 
-//Users constructor
+// Users constructor
 func NewUsers(us application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Users {
 	return &Users{
 		us: us,
@@ -27,8 +29,10 @@ func NewUsers(us application.UserAppInterface, rd auth.AuthInterface, tk auth.To
 
 func (s *Users) SaveUser(c *gin.Context) {
 	var user entity.User
+	// In  first name and last name
+	fmt.Println("SaveUser: ", user)
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"invalid_json": "invalid json",
 		})
 		return
@@ -36,7 +40,7 @@ func (s *Users) SaveUser(c *gin.Context) {
 	//validate the request:
 	validateErr := user.Validate("")
 	if len(validateErr) > 0 {
-		c.JSON(http.StatusUnprocessableEntity, validateErr)
+		c.JSON(http.StatusBadRequest, validateErr)
 		return
 	}
 	newUser, err := s.us.SaveUser(&user)

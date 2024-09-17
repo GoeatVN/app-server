@@ -30,7 +30,7 @@ func NewUsers(us application.UserAppInterface, rd auth.AuthInterface, tk auth.To
 func (s *Users) SaveUser(c *gin.Context) {
 	var user entity.User
 	// In  first name and last name
-	fmt.Println("SaveUser: ", user)
+
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"invalid_json": "invalid json",
@@ -38,6 +38,8 @@ func (s *Users) SaveUser(c *gin.Context) {
 		return
 	}
 	//validate the request:
+	fmt.Println("FirstName: ", user.FirstName)
+	fmt.Println("LastName: ", user.LastName)
 	validateErr := user.Validate("")
 	if len(validateErr) > 0 {
 		c.JSON(http.StatusBadRequest, validateErr)

@@ -5,13 +5,16 @@ import (
 	"food-app/domain/repository"
 )
 
+// userApp struct holds methods for user use cases
 type userApp struct {
 	us repository.UserRepository
 }
 
-//UserApp implements the UserAppInterface
+// UserApp implements the UserAppInterface
 var _ UserAppInterface = &userApp{}
 
+// UserAppInterface defines the methods that any implementation of user application logic must provide.
+// It includes methods for saving a user, retrieving all users, retrieving a user by ID, and retrieving a user by email and password.
 type UserAppInterface interface {
 	SaveUser(*entity.User) (*entity.User, map[string]string)
 	GetUsers() ([]entity.User, error)

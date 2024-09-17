@@ -2,7 +2,8 @@ package main
 
 import (
 	"food-app/infrastructure/auth"
-	"food-app/infrastructure/persistence"
+	persistence "food-app/infrastructure/database"
+
 	"food-app/interfaces"
 	"food-app/interfaces/fileupload"
 	"food-app/interfaces/middleware"

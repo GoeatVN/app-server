@@ -5,19 +5,25 @@ import (
 	"food-app/domain/entity"
 	"food-app/domain/repository"
 	"food-app/infrastructure/security"
+	"strings"
+
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
-	"strings"
 )
 
 type UserRepo struct {
+	// sử dụng baseRepo
+	//persistence.Repository[entity.User]
 	db *gorm.DB
 }
 
+// NewUserRepository creates and returns a new instance of UserRepo.
+// It initializes the UserRepo with a database connection.
 func NewUserRepository(db *gorm.DB) *UserRepo {
 	return &UserRepo{db}
 }
-//UserRepo implements the repository.UserRepository interface
+
+// UserRepo implements the repository.UserRepository interface
 var _ repository.UserRepository = &UserRepo{}
 
 func (r *UserRepo) SaveUser(user *entity.User) (*entity.User, map[string]string) {

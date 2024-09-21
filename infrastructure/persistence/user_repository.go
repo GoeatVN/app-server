@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 type UserRepo struct {
@@ -77,16 +78,23 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 		password)
 	// Example of a struct result (each procedure can have different results)
 	type Result struct {
-		CntId   int    `pgColumn:"cnt_id"`
-		CntName string `pgColumn:"cnt_name"`
-		CntInt  int    `pgColumn:"cnt_int"`
-		//CntDate time.Time `pgColumn:"cnt_date"`
+		CntId          int       `pgColumn:"cnt_id"`
+		CntName        string    `pgColumn:"cnt_name"`
+		CntInt         int       `pgColumn:"cnt_int"`
+		CntTest        string    `pgColumn:"cnt_test"`
+		CntDate        time.Time `pgColumn:"cnt_date"`
+		CntTimeStamp   time.Time `pgColumn:"cnt_timestamp"`
+		CntTime        time.Time `pgColumn:"cnt_time"`
+		CtnNumeric     float64   `pgColumn:"cnt_numeric"`
+		CtnBoolean     bool      `pgColumn:"cnt_boolean"`
+		CtnTimestampTz time.Time `pgColumn:"cnt_timestamptz"`
 	}
 
 	// Struct containing parameters with `pgParam` tags
 	type ContentParams struct {
 		CntId   int    `pgParam:"prm_id"`
 		CntName string `pgParam:"prm_name"`
+		CurRef  string `pgCur:"cur_ref"`
 	}
 	// Kết nối đến database qua biến môi trường DATABASE_URL
 	conn, err := pgx.Connect(context.Background(), connInfo)
@@ -98,21 +106,21 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	// Định nghĩa struct chứa tham số đầu vào cho stored procedure
 	params := ContentParams{
 		CntId:   1,
-		CntName: "thong",
+		CntName: "thong123",
 	}
 
 	// Khởi tạo slice để chứa kết quả trả về
 	var results []Result
 
 	// Gọi hàm ExecuteStoredProcedure từ module db
-	err = ExecuteStoredProcedure(conn, "content_get_test", params, &results)
+	err = ExecuteStoredProcedureWithCursor(conn, "content_get_test", params, &results)
 	if err != nil {
 		log.Fatalf("Lỗi khi gọi stored procedure: %v\n", err)
 	}
 
 	// In kết quả
 	for _, result := range results {
-		fmt.Printf("CntId: %d, CntName: %s, CntInt: %d, CntDate: %s\n", result.CntId, result.CntName, result.CntInt)
+		fmt.Printf("CntId: %d, CntName: %s, CntInt: %d, CntDate: %s\n", result.CntId, result.CntName, result.CntInt, result.CntDate)
 	}
 
 	if gorm.IsRecordNotFoundError(err) {

@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 type Token struct{}
 
 func NewToken() *Token {
@@ -23,7 +22,7 @@ type TokenInterface interface {
 	ExtractTokenMetadata(*http.Request) (*AccessDetails, error)
 }
 
-//Token implements the TokenInterface
+// Token implements the TokenInterface
 var _ TokenInterface = &Token{}
 
 func (t *Token) CreateToken(userid uint64) (*TokenDetails, error) {
@@ -85,7 +84,7 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 	return token, nil
 }
 
-//get the token from the request body
+// get the token from the request body
 func ExtractToken(r *http.Request) string {
 	bearToken := r.Header.Get("Authorization")
 	strArr := strings.Split(bearToken, " ")

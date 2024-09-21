@@ -22,7 +22,7 @@ type UploadFileInterface interface {
 	UploadFile(file *multipart.FileHeader) (string, error)
 }
 
-//So what is exposed is Uploader
+// So what is exposed is Uploader
 var _ UploadFileInterface = &fileUpload{}
 
 //func (fu *fileUpload) UploadFilex(file *multipart.FileHeader) (string, error) {

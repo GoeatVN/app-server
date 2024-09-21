@@ -210,7 +210,7 @@ func TestSaverFood_Success(t *testing.T) {
 	assert.EqualValues(t, food.FoodImage, "dbdbf-dhbfh-bfy34-34jh-fd.jpg")
 }
 
-//When wrong token is provided
+// When wrong token is provided
 func TestSaverFood_Unauthorized(t *testing.T) {
 	//Mock extracting metadata
 	fakeToken.ExtractTokenMetadataFn = func(r *http.Request) (*auth.AccessDetails, error) {
@@ -492,7 +492,7 @@ func TestUpdateFood_Success_With_File(t *testing.T) {
 	assert.EqualValues(t, food.FoodImage, "dbdbf-dhbfh-bfy34-34jh-fd-updated.jpg")
 }
 
-//This is where file is not updated. A user can choose not to update file, in that case, the old file will still be used
+// This is where file is not updated. A user can choose not to update file, in that case, the old file will still be used
 func TestUpdateFood_Success_Without_File(t *testing.T) {
 
 	//Mock extracting metadata

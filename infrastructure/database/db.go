@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"food-app/domain/entity"
 	"food-app/domain/repository"
-
 	"food-app/infrastructure/persistence"
 
 	"github.com/jinzhu/gorm"

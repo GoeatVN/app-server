@@ -9,7 +9,6 @@ type foodApp struct {
 	fr repository.FoodRepository
 }
 
-
 var _ FoodAppInterface = &foodApp{}
 
 type FoodAppInterface interface {

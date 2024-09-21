@@ -21,7 +21,7 @@ func DBConn() (*gorm.DB, error) {
 	return CIBuild()
 }
 
-//Circle CI DB
+// Circle CI DB
 func CIBuild() (*gorm.DB, error) {
 	var err error
 	DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", "127.0.0.1", "5432", "steven", "food-app-test", "password")
@@ -32,7 +32,7 @@ func CIBuild() (*gorm.DB, error) {
 	return conn, nil
 }
 
-//Local DB
+// Local DB
 func LocalDatabase() (*gorm.DB, error) {
 	dbdriver := os.Getenv("TEST_DB_DRIVER")
 	host := os.Getenv("TEST_DB_HOST")

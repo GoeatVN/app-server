@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-//UserAppInterface is a mock user app interface
+// UserAppInterface is a mock user app interface
 type UserAppInterface struct {
 	SaveUserFn                  func(*entity.User) (*entity.User, map[string]string)
 	GetUsersFn                  func() ([]entity.User, error)
@@ -15,27 +15,27 @@ type UserAppInterface struct {
 	GetUserByEmailAndPasswordFn func(*entity.User) (*entity.User, map[string]string)
 }
 
-//SaveUser calls the SaveUserFn
+// SaveUser calls the SaveUserFn
 func (u *UserAppInterface) SaveUser(user *entity.User) (*entity.User, map[string]string) {
 	return u.SaveUserFn(user)
 }
 
-//GetUsersFn calls the GetUsers
+// GetUsersFn calls the GetUsers
 func (u *UserAppInterface) GetUsers() ([]entity.User, error) {
 	return u.GetUsersFn()
 }
 
-//GetUserFn calls the GetUser
+// GetUserFn calls the GetUser
 func (u *UserAppInterface) GetUser(userId uint64) (*entity.User, error) {
 	return u.GetUserFn(userId)
 }
 
-//GetUserByEmailAndPasswordFn calls the GetUserByEmailAndPassword
+// GetUserByEmailAndPasswordFn calls the GetUserByEmailAndPassword
 func (u *UserAppInterface) GetUserByEmailAndPassword(user *entity.User) (*entity.User, map[string]string) {
 	return u.GetUserByEmailAndPasswordFn(user)
 }
 
-//FoodAppInterface is a mock food app interface
+// FoodAppInterface is a mock food app interface
 type FoodAppInterface struct {
 	SaveFoodFn   func(*entity.Food) (*entity.Food, map[string]string)
 	GetAllFoodFn func() ([]entity.Food, error)
@@ -60,7 +60,7 @@ func (f *FoodAppInterface) DeleteFood(foodId uint64) error {
 	return f.DeleteFoodFn(foodId)
 }
 
-//AuthInterface is a mock auth interface
+// AuthInterface is a mock auth interface
 type AuthInterface struct {
 	CreateAuthFn    func(uint64, *auth.TokenDetails) error
 	FetchAuthFn     func(string) (uint64, error)
@@ -81,7 +81,7 @@ func (f *AuthInterface) CreateAuth(userId uint64, authD *auth.TokenDetails) erro
 	return f.CreateAuthFn(userId, authD)
 }
 
-//TokenInterface is a mock token interface
+// TokenInterface is a mock token interface
 type TokenInterface struct {
 	CreateTokenFn          func(userId uint64) (*auth.TokenDetails, error)
 	ExtractTokenMetadataFn func(*http.Request) (*auth.AccessDetails, error)
@@ -101,4 +101,3 @@ type UploadFileInterface struct {
 func (up *UploadFileInterface) UploadFile(file *multipart.FileHeader) (string, error) {
 	return up.UploadFileFn(file)
 }
-

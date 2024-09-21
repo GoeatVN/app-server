@@ -9,7 +9,6 @@ import (
 	"strings"
 )
 
-
 type FoodRepo struct {
 	db *gorm.DB
 }
@@ -18,7 +17,7 @@ func NewFoodRepository(db *gorm.DB) *FoodRepo {
 	return &FoodRepo{db}
 }
 
-//FoodRepo implements the repository.FoodRepository interface
+// FoodRepo implements the repository.FoodRepository interface
 var _ repository.FoodRepository = &FoodRepo{}
 
 func (r *FoodRepo) SaveFood(food *entity.Food) (*entity.Food, map[string]string) {

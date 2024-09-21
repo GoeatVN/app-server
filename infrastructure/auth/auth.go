@@ -39,7 +39,7 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-//Save token metadata to Redis
+// Save token metadata to Redis
 func (tk *ClientData) CreateAuth(userid uint64, td *TokenDetails) error {
 	at := time.Unix(td.AtExpires, 0) //converting Unix to UTC(to Time object)
 	rt := time.Unix(td.RtExpires, 0)
@@ -59,7 +59,7 @@ func (tk *ClientData) CreateAuth(userid uint64, td *TokenDetails) error {
 	return nil
 }
 
-//Check the metadata saved
+// Check the metadata saved
 func (tk *ClientData) FetchAuth(tokenUuid string) (uint64, error) {
 	userid, err := tk.client.Get(tokenUuid).Result()
 	if err != nil {
@@ -69,7 +69,7 @@ func (tk *ClientData) FetchAuth(tokenUuid string) (uint64, error) {
 	return userID, nil
 }
 
-//Once a user row in the token table
+// Once a user row in the token table
 func (tk *ClientData) DeleteTokens(authD *AccessDetails) error {
 	//get the refresh uuid
 	refreshUuid := fmt.Sprintf("%s++%d", authD.TokenUuid, authD.UserId)

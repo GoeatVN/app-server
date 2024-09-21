@@ -21,7 +21,7 @@ type Food struct {
 	rd         auth.AuthInterface
 }
 
-//Food constructor
+// Food constructor
 func NewFood(fApp application.FoodAppInterface, uApp application.UserAppInterface, fd fileupload.UploadFileInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Food {
 	return &Food{
 		foodApp:    fApp,

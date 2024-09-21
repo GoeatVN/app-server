@@ -6,6 +6,11 @@ type Repository[T any] struct {
 	db *gorm.DB
 }
 
+func NewRepository[T any](db *gorm.DB) *Repository[T] {
+	return &Repository[T]{
+		db: db,
+	}
+}
 func (r *Repository[T]) Create(db *gorm.DB, entity *T) error {
 	return db.Create(entity).Error
 }
@@ -26,4 +31,7 @@ func (r *Repository[T]) CountById(db *gorm.DB, id any) (int64, error) {
 
 func (r *Repository[T]) FindById(db *gorm.DB, entity *T, id any) error {
 	return db.Where("id = ?", id).Take(entity).Error
+}
+func (r *Repository[T]) GetAll(db *gorm.DB, entity *T) error {
+	return db.Take(entity).Error
 }

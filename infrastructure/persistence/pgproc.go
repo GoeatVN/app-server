@@ -70,7 +70,7 @@ func (p *PgProc) Call(result interface{}, schema string, proc string, params ...
 		pq.QuoteIdentifier(proc),
 		paramsString(len(params)))
 	// in  query + " " + fmt.Sprint(params) và xuống dòng
-	fmt.Print(query + " " + fmt.Sprint(params) + "\n")
+	fmt.Println(query + " " + fmt.Sprint(params...))
 
 	if rt.scalar {
 		if !rt.setof {
@@ -114,7 +114,7 @@ func (p *PgProc) Call(result interface{}, schema string, proc string, params ...
 			row := p.db.QueryRow(query, params...)
 			err = ScanCompositeRow(row, rt, result)
 			if err != nil {
-				fmt.Sprintf("Error: %v", err)
+				fmt.Printf("Error: %v\n", err)
 				return err
 			}
 		} else {
@@ -133,30 +133,47 @@ func (p *PgProc) Call(result interface{}, schema string, proc string, params ...
 	return err
 }
 
+// ScanCompositeRow scans a single row from the database into the provided result struct.
 func ScanCompositeRow(row *sql.Row, rt *returnType, result interface{}) error {
 
+	// Get the reflect value of the result struct
 	v := reflect.ValueOf(result).Elem()
 	var vs []interface{}
+
+	// Iterate over the composite field names
 	for _, name := range rt.compositeNames {
-		f := v.FieldByName(strings.Title(name))
+		/// Replace underscores with spaces and convert to uppercase
+		formattedName := strings.ToUpper(strings.ReplaceAll(name, "_", " "))
+		// Remove spaces to get the final field name
+		formattedName = strings.ReplaceAll(formattedName, " ", "")
+
+		// Get the field by name from the result struct
+		f := v.FieldByName(strings.Title(formattedName))
 		if !f.IsValid() {
+			// If the field is not found, try to get it by the tag
 			fieldName, found := getFieldByTag(result, name)
 			if !found {
-				return errors.New("Error field " + name + " not found")
+				//return errors.New("Error field " + name + " not found")
+				continue
 			}
 			f = v.FieldByName(fieldName)
 		}
+		// Get the address of the field and append it to the slice
 		field := f.Addr().Interface()
 		vs = append(vs, field)
+
+		// Check if the field is a struct and has a "Valid" field
 		for i, val := range vs {
 			if reflect.ValueOf(val).Elem().Kind() == reflect.Struct {
 				nullField := reflect.ValueOf(val).Elem()
 				if nullField.FieldByName("Valid").Bool() == false {
+					// Set the field to its zero value if "Valid" is false
 					v.FieldByName(strings.Title(rt.compositeNames[i])).Set(reflect.Zero(f.Type()))
 				}
 			}
 		}
 	}
+	// Scan the row into the slice of field addresses
 	err := row.Scan(vs...)
 	return err
 }
@@ -277,10 +294,11 @@ func getFieldByTag(v interface{}, tag string) (string, bool) {
 	t := reflect.TypeOf(v).Elem()
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		foundTag := f.Tag.Get("pgproc")
+		foundTag := f.Tag.Get("pgColumn")
 		if foundTag == tag {
 			return f.Name, true
 		}
 	}
-	return "", false
+	// If tag not found, return the field name as default
+	return tag, true
 }

@@ -1,18 +1,14 @@
 package persistence
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"food-app/domain/entity"
 	"food-app/domain/repository"
 	"food-app/infrastructure/security"
-	"log"
-	"os"
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -65,18 +61,6 @@ func (r *UserRepo) GetUser(id uint64) (*entity.User, error) {
 func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	var users []entity.User
 	//err := r.db.Debug().Find(&users).Error
-
-	host := os.Getenv("DB_HOST")
-	password := os.Getenv("DB_PASSWORD")
-	user := os.Getenv("DB_USER")
-	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-	connInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
-		host,
-		port,
-		user,
-		dbname,
-		password)
 	// Example of a struct result (each procedure can have different results)
 	type Result struct {
 		CntId          int       `pgColumn:"cnt_id"`
@@ -89,34 +73,35 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 		CtnNumeric     float64   `pgColumn:"cnt_numeric"`
 		CtnBoolean     bool      `pgColumn:"cnt_boolean"`
 		CtnTimestampTz time.Time `pgColumn:"cnt_timestamptz"`
+		ctnTemp        float64   `pgColumn:"cnt_temp"`
 	}
 
 	// Struct containing parameters with `pgParam` tags
 	type ContentParams struct {
-		CntId   int    `pgParam:"prm_id"`
-		CntName string `pgParam:"prm_name"`
-		CurRef  string `pgCur:"cur_ref"`
+		CntId   int       `pgParam:"prm_id"`
+		CntName string    `pgParam:"prm_name"`
+		CntDate time.Time `pgParam:"prm_date"`
+		CurRef  string    `pgCur:"cur_ref"`
 	}
-	// Kết nối đến database qua biến môi trường DATABASE_URL
-	conn, err := pgx.Connect(context.Background(), connInfo)
-	if err != nil {
-		log.Fatalf("Không thể kết nối đến database: %v\n", err)
-	}
-	defer conn.Close(context.Background())
-
 	// Định nghĩa struct chứa tham số đầu vào cho stored procedure
 	params := ContentParams{
 		CntId:   1,
 		CntName: "thong",
+		CntDate: time.Now(),
 	}
 
 	// Khởi tạo slice để chứa kết quả trả về
 	var results []Result
-
+	//// Tạo một context cơ bản
+	//ctx := context.Background()
+	//
+	//// Nếu bạn muốn đặt timeout
+	//ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	//defer cancel()
 	// Gọi hàm ExecuteStoredProcedure từ module db
-	results, err = ExecuteStoredProcedureWithCursor[Result](conn, "content_get_test", params, 100)
+	results, err := ExecuteStoredProcedureWithCursor[Result]("content_get_test", params)
 	if err != nil {
-		log.Fatalf("Lỗi khi gọi stored procedure: %v\n", err)
+		fmt.Println("Lỗi khi gọi stored procedure: %v\n", err)
 	}
 
 	// In kết quả

@@ -7,13 +7,14 @@ import (
 	"food-app/domain/entity"
 	"food-app/domain/repository"
 	"food-app/infrastructure/security"
-	"github.com/jackc/pgx/v5"
-	"github.com/jinzhu/gorm"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepo struct {
@@ -106,14 +107,14 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	// Định nghĩa struct chứa tham số đầu vào cho stored procedure
 	params := ContentParams{
 		CntId:   1,
-		CntName: "thong123",
+		CntName: "thong",
 	}
 
 	// Khởi tạo slice để chứa kết quả trả về
 	var results []Result
 
 	// Gọi hàm ExecuteStoredProcedure từ module db
-	err = ExecuteStoredProcedureWithCursor(conn, "content_get_test", params, &results)
+	results, err = ExecuteStoredProcedureWithCursor[Result](conn, "content_get_test", params, 100)
 	if err != nil {
 		log.Fatalf("Lỗi khi gọi stored procedure: %v\n", err)
 	}

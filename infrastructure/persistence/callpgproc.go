@@ -3,10 +3,11 @@ package persistence
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // Generic function to execute stored procedures with pgx v5
@@ -55,10 +56,10 @@ func ExecuteStoredProcedure(conn *pgx.Conn, procedureName string, paramsStruct i
 
 	return nil
 }
-func ExecuteStoredProcedureWithCursor(conn *pgx.Conn, procedureName string, paramsStruct interface{}, resultStruct interface{}) error {
+func ExecuteStoredProcedureWithCursor[T any](conn *pgx.Conn, procedureName string, paramsStruct interface{}, batchSize int) ([]T, error) {
 	args, cursorName, err := extractParams(paramsStruct)
 	if err != nil {
-		return fmt.Errorf("failed to extract parameters: %v", err)
+		return nil, fmt.Errorf("failed to extract parameters: %v", err)
 	}
 
 	if cursorName == "" {
@@ -67,7 +68,7 @@ func ExecuteStoredProcedureWithCursor(conn *pgx.Conn, procedureName string, para
 
 	tx, err := conn.Begin(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
+		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(context.Background())
 
@@ -77,47 +78,46 @@ func ExecuteStoredProcedureWithCursor(conn *pgx.Conn, procedureName string, para
 	// Gọi function với cursor
 	_, err = tx.Exec(context.Background(), fmt.Sprintf("SELECT %s(%s)", procedureName, buildPlaceholders(len(args))), args...)
 	if err != nil {
-		return fmt.Errorf("failed to execute function: %v", err)
+		return nil, fmt.Errorf("failed to execute function: %v", err)
 	}
 
-	resultSlice := reflect.ValueOf(resultStruct).Elem()
+	var results []T
 
 	for {
 		// Fetch một batch các rows
-		rows, err := tx.Query(context.Background(), fmt.Sprintf("FETCH %d FROM %s", 1000, cursorName))
+		rows, err := tx.Query(context.Background(), fmt.Sprintf("FETCH %d FROM %s", batchSize, cursorName))
 		if err != nil {
-			return fmt.Errorf("failed to fetch from cursor: %v", err)
+			return nil, fmt.Errorf("failed to fetch from cursor: %v", err)
 		}
 
-		batchResult := reflect.New(resultSlice.Type()).Elem()
-		err = mapRowsToStruct(rows, batchResult.Addr().Interface())
+		batchResult, err := mapRowsToSlice[T](rows)
 		rows.Close()
 
 		if err != nil {
-			return fmt.Errorf("failed to map rows: %v", err)
+			return nil, fmt.Errorf("failed to map rows: %v", err)
 		}
 
-		if batchResult.Len() == 0 {
+		if len(batchResult) == 0 {
 			// Không còn rows nào nữa
 			break
 		}
 
 		// Append batch result vào slice kết quả cuối cùng
-		resultSlice.Set(reflect.AppendSlice(resultSlice, batchResult))
+		results = append(results, batchResult...)
 	}
 
 	// Đóng cursor
 	_, err = tx.Exec(context.Background(), fmt.Sprintf("CLOSE %s", cursorName))
 	if err != nil {
-		return fmt.Errorf("failed to close cursor: %v", err)
+		return nil, fmt.Errorf("failed to close cursor: %v", err)
 	}
 
 	err = tx.Commit(context.Background())
 	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
+		return nil, fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
-	return nil
+	return results, nil
 }
 
 func ExecuteStoredProcedureWithTable(conn *pgx.Conn, procedureName string, paramsStruct interface{}, resultStruct interface{}) error {
@@ -171,6 +171,72 @@ func ExecuteStoredProcedureWithTable(conn *pgx.Conn, procedureName string, param
 	}
 
 	return nil
+}
+
+func normalizeFieldName(name string) string {
+	return strings.ReplaceAll(strings.ToUpper(name), "_", "")
+}
+
+func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
+	var results []T
+
+	fields := rows.FieldDescriptions()
+
+	for rows.Next() {
+		var result T
+		values, err := rows.Values()
+		if err != nil {
+			return nil, err
+		}
+
+		resultValue := reflect.ValueOf(&result).Elem()
+		resultType := resultValue.Type()
+
+		for i, field := range fields {
+			dbFieldName := normalizeFieldName(field.Name)
+
+			for j := 0; j < resultType.NumField(); j++ {
+				structField := resultType.Field(j)
+				structFieldValue := resultValue.Field(j)
+
+				pgColumnTag := structField.Tag.Get("pgColumn")
+				var fieldToCompare string
+
+				if pgColumnTag != "" {
+					fieldToCompare = normalizeFieldName(pgColumnTag)
+				} else {
+					fieldToCompare = normalizeFieldName(structField.Name)
+				}
+
+				if fieldToCompare == dbFieldName {
+					if structFieldValue.IsValid() && structFieldValue.CanSet() {
+						if values[i] != nil {
+							// Xử lý các kiểu dữ liệu đặc biệt nếu cần
+							switch structFieldValue.Kind() {
+							case reflect.Struct:
+								// Xử lý các kiểu như time.Time
+								if timeValue, ok := values[i].(time.Time); ok {
+									structFieldValue.Set(reflect.ValueOf(timeValue))
+								}
+							default:
+								// Cho các kiểu dữ liệu cơ bản
+								structFieldValue.Set(reflect.ValueOf(values[i]))
+							}
+						}
+					}
+					break
+				}
+			}
+		}
+
+		results = append(results, result)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 // Helper function to map rows from cursor to result struct

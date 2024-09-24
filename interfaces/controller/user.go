@@ -12,6 +12,7 @@ import (
 )
 
 // Users struct defines the dependencies that will be used
+// contructor
 type Users struct {
 	us application.UserAppInterface
 	rd auth.AuthInterface
@@ -19,7 +20,11 @@ type Users struct {
 }
 
 // tạo routes cho user
-func RouterUser(r *gin.Engine, us application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) {
+func RouterUser(
+	r *gin.Engine,
+	us application.UserAppInterface,
+	rd auth.AuthInterface,
+	tk auth.TokenInterface) {
 	users := NewUsers(us, rd, tk)
 	userRoutes := r.Group("/v1/users")
 	{
@@ -67,6 +72,8 @@ func (s *Users) GetUsers(c *gin.Context) {
 	users := entity.Users{} //customize user
 	var err error
 	//us, err = application.UserApp.GetUsers()
+	// interface của service
+	// interface của repository
 	users, err = s.us.GetUsers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())

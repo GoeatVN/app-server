@@ -35,7 +35,13 @@ var _ repository.UserRepository = &UserRepo{}
 
 func (r *UserRepo) SaveUser(user *entity.User) (*entity.User, map[string]string) {
 	dbErr := map[string]string{}
-	err := r.db.Debug().Create(&user).Error
+	var err error
+
+	if user.ID == 0 {
+		err = r.db.Debug().Create(&user).Error
+	}
+	err = r.db.Debug().Update(&user).Error
+
 	if err != nil {
 		//If the email is already taken
 		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "Duplicate") {
@@ -85,6 +91,7 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	}
 
 	// Struct containing parameters with `pgParam` tags
+
 	type ContentParams struct {
 		CntId   int       `pgParam:"prm_id"`
 		CntName string    `pgParam:"prm_name"`
@@ -100,10 +107,8 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 
 	// Khởi tạo slice để chứa kết quả trả về
 	var results []Result
-	//// Tạo một context cơ bản
 	//ctx := context.Background()
-	//
-	//// Nếu bạn muốn đặt timeout
+
 	//ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	//defer cancel()
 	// Gọi hàm ExecuteStoredProcedure từ module db

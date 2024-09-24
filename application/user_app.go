@@ -6,6 +6,7 @@ import (
 )
 
 // userApp struct holds methods for user use cases
+// contructor
 type userApp struct {
 	us repository.UserRepository
 }
@@ -31,6 +32,7 @@ func (u *userApp) GetUser(userId uint64) (*entity.User, error) {
 }
 
 func (u *userApp) GetUsers() ([]entity.User, error) {
+
 	return u.us.GetUsers()
 }
 

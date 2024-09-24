@@ -2,8 +2,7 @@ package response
 
 import (
 	"fmt"
-	"food-app/utils/constants"
-
+	"food-app/infrastructure/common/constants"
 	"github.com/go-playground/validator/v10"
 )
 

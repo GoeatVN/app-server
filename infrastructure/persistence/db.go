@@ -1,12 +1,12 @@
-package database
+package persistence
 
 import (
 	"fmt"
 	"food-app/domain/entity"
 	"food-app/domain/repository"
-	"food-app/infrastructure/persistence"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
+	"os"
 )
 
 type Repositories struct {
@@ -15,17 +15,29 @@ type Repositories struct {
 	db   *gorm.DB
 }
 
-func NewDatabase(Driver, DbUser, DbPassword, DbPort, DbHost, DbName string) (*Repositories, error) {
-	BURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
-	db, err := gorm.Open(Driver, BURL)
+func NewDatabase() (*Repositories, error) {
+	driver := os.Getenv("DB_DRIVER")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	password := os.Getenv("DB_PASSWORD")
+	user := os.Getenv("DB_USER")
+	dbname := os.Getenv("DB_NAME")
+
+	dns := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
+		host,
+		port,
+		user,
+		dbname,
+		password)
+	db, err := gorm.Open(driver, dns)
 	if err != nil {
 		return nil, err
 	}
 	db.LogMode(true)
 
 	return &Repositories{
-		User: persistence.NewUserRepository(db),
-		Food: persistence.NewFoodRepository(db),
+		User: NewUserRepository(db),
+		Food: NewFoodRepository(db),
 		db:   db,
 	}, nil
 }

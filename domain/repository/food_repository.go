@@ -1,6 +1,6 @@
 package repository
 
-import "food-app/3.domain/entity"
+import "food-app/domain/entity"
 
 type FoodRepository interface {
 	SaveFood(*entity.Food) (*entity.Food, map[string]string)

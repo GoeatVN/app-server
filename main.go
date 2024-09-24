@@ -2,11 +2,10 @@ package main
 
 import (
 	"food-app/infrastructure/auth"
-	persistence "food-app/infrastructure/database"
-
-	"food-app/interfaces"
-	"food-app/interfaces/fileupload"
-	"food-app/interfaces/middleware"
+	"food-app/infrastructure/persistence"
+	middleware2 "food-app/interfaces/adapter/middleware"
+	"food-app/interfaces/common/file_upload"
+	"food-app/interfaces/controller"
 	"log"
 	"os"
 
@@ -22,62 +21,65 @@ func init() {
 }
 
 func main() {
-
-	dbdriver := os.Getenv("DB_DRIVER")
-	host := os.Getenv("DB_HOST")
-	password := os.Getenv("DB_PASSWORD")
-	user := os.Getenv("DB_USER")
-	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-
-	//redis details
-	redis_host := os.Getenv("REDIS_HOST")
-	redis_port := os.Getenv("REDIS_PORT")
-	redis_password := os.Getenv("REDIS_PASSWORD")
-
-	services, err := persistence.NewRepositories(dbdriver, user, password, port, host, dbname)
+	// create database connection
+	db, err := persistence.NewDatabase()
 	if err != nil {
 		panic(err)
 	}
-	defer services.Close()
-	services.Automigrate()
-
-	redisService, err := auth.NewRedisDB(redis_host, redis_port, redis_password)
+	defer func(db *persistence.Repositories) {
+		err := db.Close()
+		if err != nil {
+			log.Println("error closing the database: ", err)
+			return
+		}
+	}(db)
+	// create redis connection
+	redisService, err := auth.NewRedisDB()
 	if err != nil {
 		log.Fatal(err)
+		return
 	}
 
 	tk := auth.NewToken()
-	fd := fileupload.NewFileUpload()
+	fd := file_upload.NewFileUpload()
 
-	users := interfaces.NewUsers(services.User, redisService.Auth, tk)
-	foods := interfaces.NewFood(services.Food, services.User, fd, redisService.Auth, tk)
-	authenticate := interfaces.NewAuthenticate(services.User, redisService.Auth, tk)
+	users := controller.NewUsers(db.User, redisService.Auth, tk)
+	foods := controller.NewFood(db.Food, db.User, fd, redisService.Auth, tk)
+	authenticate := controller.NewAuthenticate(db.User, redisService.Auth, tk)
 
 	r := gin.Default()
-	r.Use(middleware.CORSMiddleware()) //For CORS
+	r.Use(middleware2.CORSMiddleware()) //For CORS
 
-	//user routes
-	r.POST("/users", users.SaveUser)
-	r.GET("/users", users.GetUsers)
-	r.GET("/users/:user_id", users.GetUser)
+	//user rout
+	userRoutes := r.Group("/v1/users")
+	{
+		userRoutes.POST("", users.SaveUser)
+		userRoutes.GET("", users.GetUsers)
+		userRoutes.GET("/:user_id", users.GetUser)
+	}
 
 	//post routes
-	r.POST("/food", middleware.AuthMiddleware(), middleware.MaxSizeAllowed(8192000), foods.SaveFood)
-	r.PUT("/food/:food_id", middleware.AuthMiddleware(), middleware.MaxSizeAllowed(8192000), foods.UpdateFood)
-	r.GET("/food/:food_id", foods.GetFoodAndCreator)
-	r.DELETE("/food/:food_id", middleware.AuthMiddleware(), foods.DeleteFood)
-	r.GET("/food", foods.GetAllFood)
+	foodRoutes := r.Group("/v1/food")
+	{
+		foodRoutes.POST("", middleware2.AuthMiddleware(), middleware2.MaxSizeAllowed(8192000), foods.SaveFood)
+		foodRoutes.PUT("/:food_id", middleware2.AuthMiddleware(), middleware2.MaxSizeAllowed(8192000), foods.UpdateFood)
+		foodRoutes.GET("/:food_id", foods.GetFoodAndCreator)
+		foodRoutes.DELETE("/:food_id", middleware2.AuthMiddleware(), foods.DeleteFood)
+		foodRoutes.GET("", foods.GetAllFood)
+	}
 
 	//authentication routes
-	r.POST("/login", authenticate.Login)
-	r.POST("/logout", authenticate.Logout)
-	r.POST("/refresh", authenticate.Refresh)
+	authentication := r.Group("/v1/auth")
+	{
+		authentication.POST("/login", authenticate.Login)
+		authentication.POST("/logout", authenticate.Logout)
+		authentication.POST("/refresh", authenticate.Refresh)
+	}
 
 	//Starting the application
-	app_port := os.Getenv("API_PORT") //using heroku host
-	if app_port == "" {
-		app_port = "8888" //localhost
+	appPort := os.Getenv("APP_PORT") //using heroku host
+	if appPort == "" {
+		appPort = "8888" //localhost
 	}
-	log.Fatal(r.Run(":" + app_port))
+	log.Fatal(r.Run(":" + appPort))
 }

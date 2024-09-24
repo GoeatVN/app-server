@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"food-app/domain/entity"
 	"food-app/domain/repository"
+	persistence2 "food-app/infrastructure/database"
 	"food-app/infrastructure/security"
 	"strings"
 	"time"
@@ -13,6 +14,9 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserRepo implements the repository.UserRepository interface
+// It will hold the connection to the database
+// and implement the methods in the UserRepository interface
 type UserRepo struct {
 	// sử dụng baseRepo
 	//persistence.Repository[entity.User]
@@ -63,17 +67,21 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	//err := r.db.Debug().Find(&users).Error
 	// Example of a struct result (each procedure can have different results)
 	type Result struct {
-		CntId          int       `pgColumn:"cnt_id"`
-		CntName        string    `pgColumn:"cnt_name"`
-		CntInt         int       `pgColumn:"cnt_int"`
-		CntTest        string    `pgColumn:"cnt_test"`
-		CntDate        time.Time `pgColumn:"cnt_date"`
+		CntName        string    `pgColumn:"cnt_name" json:"cntName"`
+		CntInt         int       `pgColumn:"cnt_int" json:"cntInt"`
+		CntTest        string    `pgColumn:"cnt_test" json:"cntTest"`
+		CntDate        time.Time `pgColumn:"cnt_date" json:"cntDate"`
 		CntTimeStamp   time.Time `pgColumn:"cnt_timestamp"`
 		CntTime        time.Time `pgColumn:"cnt_time"`
 		CtnNumeric     float64   `pgColumn:"cnt_numeric"`
 		CtnBoolean     bool      `pgColumn:"cnt_boolean"`
 		CtnTimestampTz time.Time `pgColumn:"cnt_timestamptz"`
 		ctnTemp        float64   `pgColumn:"cnt_temp"`
+		CntId          int       `pgColumn:"cnt_id" json:"cntId"`
+		/*
+			CntId        int       `pgColumn:"cnt_id" json:"cntId"`
+			CntTimeStamp time.Time `pgColumn:"cnt_timestamp"`
+		*/
 	}
 
 	// Struct containing parameters with `pgParam` tags
@@ -99,19 +107,21 @@ func (r *UserRepo) GetUsers() ([]entity.User, error) {
 	//ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	//defer cancel()
 	// Gọi hàm ExecuteStoredProcedure từ module db
-	results, err := ExecuteStoredProcedureWithCursor[Result]("content_get_test", params)
+	results, err := persistence2.ExecuteStoredProcedureWithCursor[Result]("content_get_test", params)
 	if err != nil {
 		fmt.Println("Lỗi khi gọi stored procedure: %v\n", err)
 	}
 
 	// In kết quả
 	for _, result := range results {
-		fmt.Printf("CntId: %d, CntName: %s, CntInt: %d, CntDate: %s\n", result.CntId, result.CntName, result.CntInt, result.CntDate)
+		fmt.Printf("CntId: %d, CntTimeStamp: %s\n", result.CntId, result.CntTimeStamp)
+		//fmt.Printf("CntId: %d, CntName: %s, CntInt: %d, CntDate: %s\n", result.CntId, result.CntName, result.CntInt, result.CntDate)
 	}
 
 	if gorm.IsRecordNotFoundError(err) {
 		return nil, errors.New("user not found")
 	}
+	users = append(users, entity.User{ID: 1, FirstName: "thong", LastName: "le", Email: "thongle@gmail.com"})
 	return users, nil
 }
 

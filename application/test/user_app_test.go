@@ -1,6 +1,7 @@
-package application
+package test
 
 import (
+	"food-app/application"
 	"food-app/domain/entity"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -30,7 +31,7 @@ func (u *fakeUserRepo) GetUserByEmailAndPassword(user *entity.User) (*entity.Use
 	return getUserEmailAndPasswordRepo(user)
 }
 
-var userAppFake UserAppInterface = &fakeUserRepo{} //this is where the real implementation is swap with our fake implementation
+var userAppFake application.UserAppInterface = &fakeUserRepo{} //this is where the real implementation is swap with our fake implementation
 
 func TestSaveUser_Success(t *testing.T) {
 	//Mock the response coming from the infrastructure

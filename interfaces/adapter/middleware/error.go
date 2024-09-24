@@ -7,9 +7,8 @@ import (
 )
 
 // handleError middleware to handle errors
-func handleError(c *gin.Context) {
-	c.Next() // Process request
-
+func ErrorHandler(c *gin.Context) {
+	// Process request
 	// Check if there are any errors
 	if len(c.Errors) > 0 {
 		// Log the error
@@ -19,11 +18,11 @@ func handleError(c *gin.Context) {
 			// For simplicity, we just print it
 			println(e.Err.Error())
 		}
-
 		// Return a generic error message to the client
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Internal Server Error",
 		})
 		return
 	}
+	c.Next()
 }

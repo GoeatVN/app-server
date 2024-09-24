@@ -18,6 +18,19 @@ type Users struct {
 	tk auth.TokenInterface
 }
 
+// tạo routes cho user
+func RouterUser(us application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *gin.Engine {
+	users := NewUsers(us, rd, tk)
+	r := gin.Default()
+	userRoutes := r.Group("/v1/users")
+	{
+		userRoutes.POST("", users.SaveUser)
+		userRoutes.GET("", users.GetUsers)
+		userRoutes.GET("/:user_id", users.GetUser)
+	}
+	return r
+}
+
 // Users constructor
 func NewUsers(us application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Users {
 	return &Users{

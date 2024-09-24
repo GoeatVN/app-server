@@ -18,6 +18,19 @@ type Authenticate struct {
 	tk auth.TokenInterface
 }
 
+// tạo routes cho authenticate
+func RouterAuthenticate(uApp application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *gin.Engine {
+	au := NewAuthenticate(uApp, rd, tk)
+	r := gin.Default()
+	autRoutes := r.Group("/v1/auth")
+	{
+		autRoutes.POST("/login", au.Login)
+		autRoutes.POST("/logout", au.Logout)
+		autRoutes.POST("/refresh", au.Refresh)
+	}
+	return r
+}
+
 // Authenticate constructor
 func NewAuthenticate(uApp application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Authenticate {
 	return &Authenticate{

@@ -43,14 +43,19 @@ func main() {
 	tk := auth.NewToken()
 	fd := file_upload.NewFileUpload()
 
+	r := gin.Default()
+	r.Use(middleware2.CORSMiddleware()) //For CORS
+	r.Use(middleware2.LoggerMiddleware())
+	//For error handling
+	//r.Use(middleware2.ErrorHandler())
+	//routes
+	//controller.RouterUser(db.User, redisService.Auth, tk)
+	//controller.RouterFood(db.Food, db.User, fd, redisService.Auth, tk)
+	//controller.RouterAuthenticate(db.User, redisService.Auth, tk)
+
 	users := controller.NewUsers(db.User, redisService.Auth, tk)
 	foods := controller.NewFood(db.Food, db.User, fd, redisService.Auth, tk)
 	authenticate := controller.NewAuthenticate(db.User, redisService.Auth, tk)
-
-	r := gin.Default()
-	r.Use(middleware2.CORSMiddleware()) //For CORS
-
-	//user rout
 	userRoutes := r.Group("/v1/users")
 	{
 		userRoutes.POST("", users.SaveUser)

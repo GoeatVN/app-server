@@ -1,16 +1,17 @@
 package controller
 
 import (
+	"app-server/application"
+	"app-server/domain/entity"
+	"app-server/infrastructure/auth"
+	"app-server/interfaces/common/file_upload"
 	"fmt"
-	"food-app/application"
-	"food-app/domain/entity"
-	"food-app/infrastructure/auth"
-	"food-app/interfaces/common/file_upload"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Food struct {

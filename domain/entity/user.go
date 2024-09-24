@@ -1,11 +1,12 @@
 package entity
 
 import (
-	"food-app/infrastructure/security"
-	"github.com/badoux/checkmail"
+	"app-server/infrastructure/security"
 	"html"
 	"strings"
 	"time"
+
+	"github.com/badoux/checkmail"
 )
 
 type User struct {

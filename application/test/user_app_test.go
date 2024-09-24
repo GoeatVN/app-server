@@ -1,10 +1,11 @@
 package test
 
 import (
-	"food-app/application"
-	"food-app/domain/entity"
-	"github.com/stretchr/testify/assert"
+	"app-server/application"
+	"app-server/domain/entity"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //IF YOU HAVE TIME, YOU CAN TEST ALL THE METHODS FAILURES

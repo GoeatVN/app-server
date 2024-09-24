@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"food-app/domain/entity"
+	"app-server/domain/entity"
 )
 
 type SysConfigRepository interface {

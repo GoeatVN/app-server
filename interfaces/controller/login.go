@@ -1,15 +1,16 @@
 package controller
 
 import (
+	"app-server/application"
+	"app-server/domain/entity"
+	"app-server/infrastructure/auth"
 	"fmt"
-	"food-app/application"
-	"food-app/domain/entity"
-	"food-app/infrastructure/auth"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
 type Authenticate struct {

@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"food-app/domain/entity"
-	"food-app/infrastructure/persistence"
+	"app-server/domain/entity"
+	"app-server/infrastructure/persistence"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

@@ -1,8 +1,8 @@
 package application
 
 import (
-	"food-app/domain/entity"
-	"food-app/domain/repository"
+	"app-server/domain/entity"
+	"app-server/domain/repository"
 )
 
 // userApp struct holds methods for user use cases

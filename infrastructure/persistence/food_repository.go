@@ -1,12 +1,13 @@
 package persistence
 
 import (
+	"app-server/domain/entity"
+	"app-server/domain/repository"
 	"errors"
-	"food-app/domain/entity"
-	"food-app/domain/repository"
-	"github.com/jinzhu/gorm"
 	"os"
 	"strings"
+
+	"github.com/jinzhu/gorm"
 )
 
 type FoodRepo struct {

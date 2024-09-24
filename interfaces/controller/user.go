@@ -1,10 +1,10 @@
 package controller
 
 import (
+	"app-server/application"
+	"app-server/domain/entity"
+	"app-server/infrastructure/auth"
 	"fmt"
-	"food-app/application"
-	"food-app/domain/entity"
-	"food-app/infrastructure/auth"
 	"net/http"
 	"strconv"
 

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"food-app/infrastructure/auth"
+	"app-server/infrastructure/auth"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

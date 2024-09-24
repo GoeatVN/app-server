@@ -1,12 +1,13 @@
 package persistence
 
 import (
+	"app-server/domain/entity"
+	"app-server/domain/repository"
 	"fmt"
-	"food-app/domain/entity"
-	"food-app/domain/repository"
+	"os"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
-	"os"
 )
 
 type Repositories struct {

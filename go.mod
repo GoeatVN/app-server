@@ -1,4 +1,4 @@
-module food-app
+module app-server
 
 go 1.22.6
 
@@ -9,7 +9,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis/v7 v7.0.0-beta.6
-	github.com/jackc/pgtype v1.14.3
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v6 v6.0.50
@@ -19,7 +18,6 @@ require (
 )
 
 require (
-	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

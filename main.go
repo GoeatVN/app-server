@@ -1,11 +1,11 @@
 package main
 
 import (
-	"food-app/infrastructure/auth"
-	"food-app/infrastructure/persistence"
-	middleware2 "food-app/interfaces/adapter/middleware"
-	"food-app/interfaces/common/file_upload"
-	"food-app/interfaces/controller"
+	"app-server/infrastructure/auth"
+	"app-server/infrastructure/persistence"
+	middleware2 "app-server/interfaces/adapter/middleware"
+	"app-server/interfaces/common/file_upload"
+	"app-server/interfaces/controller"
 	"log"
 	"os"
 
@@ -53,7 +53,7 @@ func main() {
 	controller.RouterUser(router, db.User, redisService.Auth, tk)
 	controller.RouterFood(router, db.Food, db.User, fd, redisService.Auth, tk)
 	controller.RouterAuthenticate(router, db.User, redisService.Auth, tk)
-	
+
 	//Starting the application
 	appPort := os.Getenv("APP_PORT") //using heroku host
 	if appPort == "" {

@@ -1,12 +1,12 @@
 package persistence
 
 import (
+	"app-server/domain/entity"
+	"app-server/domain/repository"
+	persistence2 "app-server/infrastructure/database"
+	"app-server/infrastructure/security"
 	"errors"
 	"fmt"
-	"food-app/domain/entity"
-	"food-app/domain/repository"
-	persistence2 "food-app/infrastructure/database"
-	"food-app/infrastructure/security"
 	"strings"
 	"time"
 

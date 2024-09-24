@@ -1,8 +1,8 @@
 package mock
 
 import (
-	"food-app/domain/entity"
-	"food-app/infrastructure/auth"
+	"app-server/domain/entity"
+	"app-server/infrastructure/auth"
 	"mime/multipart"
 	"net/http"
 )

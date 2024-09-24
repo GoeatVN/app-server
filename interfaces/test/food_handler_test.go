@@ -1,14 +1,12 @@
 package test
 
 import (
+	"app-server/domain/entity"
+	"app-server/infrastructure/auth"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"food-app/domain/entity"
-	"food-app/infrastructure/auth"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -16,6 +14,9 @@ import (
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 //IF YOU HAVE TIME, YOU CAN TEST ALL FAILURE CASES TO IMPROVE COVERAGE

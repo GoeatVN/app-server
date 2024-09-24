@@ -1,12 +1,13 @@
 package persistence
 
 import (
+	"app-server/domain/entity"
 	"fmt"
-	"food-app/domain/entity"
-	"github.com/jinzhu/gorm"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
+
+	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 )
 
 func DBConn() (*gorm.DB, error) {

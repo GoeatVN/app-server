@@ -1,8 +1,8 @@
 package test
 
 import (
-	"food-app/interfaces/controller"
-	"food-app/utils/mock"
+	"app-server/interfaces/controller"
+	"app-server/utils/mock"
 )
 
 var (

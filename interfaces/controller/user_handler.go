@@ -1,4 +1,4 @@
-package interfaces
+package controller
 
 import (
 	"fmt"
@@ -37,9 +37,6 @@ func (s *Users) SaveUser(c *gin.Context) {
 		})
 		return
 	}
-	//validate the request:
-	//user.FirstName = "John"
-	//user.LastName = "Doe"
 	fmt.Println("FirstName: ", user.FirstName)
 	fmt.Println("LastName: ", user.LastName)
 	validateErr := user.Validate("")

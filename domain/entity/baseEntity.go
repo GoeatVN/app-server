@@ -14,7 +14,9 @@ func Init(database *gorm.DB) {
 
 type ModelBase struct {
 	ID        uint64    `gorm:"primary_key;auto_increment" json:"id"`
+	CreatedBy string    `gorm:"size:255;not null " json:"createdBy"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
+	UpdatedBy string    `gorm:"size:255;not null " json:"updatedBy"`
 	UpdatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updatedAt"`
 	// DeletedAt *time.Time `sql:"index"`
 }

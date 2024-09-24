@@ -1,11 +1,11 @@
-package interfaces
+package controller
 
 import (
 	"fmt"
 	"food-app/application"
 	"food-app/domain/entity"
 	"food-app/infrastructure/auth"
-	"food-app/interfaces/fileupload"
+	"food-app/interfaces/common/file_upload"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
@@ -16,13 +16,13 @@ import (
 type Food struct {
 	foodApp    application.FoodAppInterface
 	userApp    application.UserAppInterface
-	fileUpload fileupload.UploadFileInterface
+	fileUpload file_upload.UploadFileInterface
 	tk         auth.TokenInterface
 	rd         auth.AuthInterface
 }
 
 // Food constructor
-func NewFood(fApp application.FoodAppInterface, uApp application.UserAppInterface, fd fileupload.UploadFileInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Food {
+func NewFood(fApp application.FoodAppInterface, uApp application.UserAppInterface, fd file_upload.UploadFileInterface, rd auth.AuthInterface, tk auth.TokenInterface) *Food {
 	return &Food{
 		foodApp:    fApp,
 		userApp:    uApp,

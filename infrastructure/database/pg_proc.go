@@ -1,17 +1,18 @@
-package persistence
+package database
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+
 	"log"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // Generic function to execute stored procedures with pgx v5
@@ -103,7 +104,7 @@ func ExecuteStoredProcedureWithCursor[T any](procedureName string, paramsStruct 
 			return nil, fmt.Errorf("failed to fetch from cursor: %w", err)
 		}
 
-		batchResult, err := mapRowsToSlice[T](rows)
+		batchResult, err := mapRowsToSlice2[T](rows)
 		//pgx.CollectRows(rows, pgx.RowToStructByName[T])
 		if err != nil {
 			return nil, fmt.Errorf("failed to collect rows: %w", err)
@@ -232,7 +233,7 @@ func connectToDB() (conn *pgx.Conn, err error) {
 }
 
 func normalizeFieldName(name string) string {
-	return strings.ReplaceAll(strings.ToUpper(name), "_", "")
+	return strings.ReplaceAll(strings.ToLower(name), "_", "")
 }
 
 func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
@@ -242,7 +243,7 @@ func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
 	columnNames := rows.FieldDescriptions()
 	columnMap := make(map[string]int)
 	for i, col := range columnNames {
-		columnMap[strings.ToLower(string(col.Name))] = i
+		columnMap[normalizeFieldName(string(col.Name))] = i
 	}
 
 	for rows.Next() {
@@ -256,7 +257,7 @@ func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
 
 			columnName := fieldType.Tag.Get("pgColumn")
 			if columnName == "" {
-				columnName = strings.ToLower(fieldType.Name)
+				columnName = normalizeFieldName(fieldType.Name)
 			}
 
 			if colIdx, ok := columnMap[columnName]; ok {
@@ -269,10 +270,112 @@ func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan row data: %v", err)
 		}
-
 		results = append(results, resultElement.Interface().(T))
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+func mapRowsToSlice2[T any](rows pgx.Rows) ([]T, error) {
+	var results []T
+	resultType := reflect.TypeOf((*T)(nil)).Elem()
+
+	// Lấy danh sách các tên cột từ kết quả truy vấn
+	columnNames := rows.FieldDescriptions()
+	columnMap := make(map[string]int)
+	for i, col := range columnNames {
+		// Sử dụng cột dưới dạng chữ thường để tránh lỗi không khớp tên
+		columnMap[normalizeFieldName(string(col.Name))] = i
+	}
+
+	// Duyệt qua từng hàng dữ liệu
+	for rows.Next() {
+		// Tạo phần tử mới của kiểu kết quả (struct)
+		resultElement := reflect.New(resultType).Elem()
+
+		// Tạo slice chứa các giá trị tương ứng với số lượng cột
+		values := make([]interface{}, len(columnNames))
+
+		// Map các field của struct với các cột trong kết quả
+		for i := 0; i < resultType.NumField(); i++ {
+			fieldType := resultType.Field(i)
+			field := resultElement.Field(i)
+
+			// Lấy tên cột từ thẻ pgColumn, nếu không có thì dùng tên field trong struct
+			columnName := normalizeFieldName(fieldType.Tag.Get("pgColumn"))
+			if columnName == "" {
+				columnName = normalizeFieldName(fieldType.Name)
+			}
+
+			// Tìm chỉ số của cột trong kết quả trả về
+			if colIdx, ok := columnMap[columnName]; ok {
+				// Sử dụng các kiểu sql.NullXXX để xử lý null
+				switch field.Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64:
+					values[colIdx] = new(sql.NullInt64)
+				case reflect.String:
+					values[colIdx] = new(sql.NullString)
+				case reflect.Float32, reflect.Float64:
+					values[colIdx] = new(sql.NullFloat64)
+				case reflect.Struct:
+					// Kiểm tra nếu kiểu là time.Time thì dùng sql.NullTime
+					if fieldType.Type == reflect.TypeOf(time.Time{}) {
+						values[colIdx] = new(sql.NullTime)
+					}
+				default:
+					// Nếu không phải kiểu null thì map trực tiếp
+					values[colIdx] = field.Addr().Interface()
+				}
+			}
+		}
+
+		// Thực hiện quét dữ liệu từ hàng vào slice values (dựa theo chỉ số cột)
+		err := rows.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row data: %v", err)
+		}
+
+		// Map giá trị từ slice values vào các field của struct, kiểm tra null
+		for i := 0; i < resultType.NumField(); i++ {
+			field := resultElement.Field(i)
+			columnName := normalizeFieldName(resultType.Field(i).Tag.Get("pgColumn"))
+			if columnName == "" {
+				columnName = normalizeFieldName(resultType.Field(i).Name)
+			}
+
+			// Lấy chỉ số cột từ columnMap
+			if colIdx, ok := columnMap[columnName]; ok {
+				// Kiểm tra giá trị trả về và map dữ liệu nếu không null
+				switch v := values[colIdx].(type) {
+				case *sql.NullInt64:
+					if v.Valid {
+						field.SetInt(v.Int64)
+					}
+				case *sql.NullString:
+					if v.Valid {
+						field.SetString(v.String)
+					}
+				case *sql.NullFloat64:
+					if v.Valid {
+						field.SetFloat(v.Float64)
+					}
+				case *sql.NullTime:
+					if v.Valid {
+						// Chuyển đổi sql.NullTime thành time.Time
+						field.Set(reflect.ValueOf(v.Time))
+					}
+				}
+			}
+		}
+
+		// Thêm phần tử đã map vào kết quả
+		results = append(results, resultElement.Interface().(T))
+	}
+
+	// Kiểm tra lỗi sau khi duyệt các hàng
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}

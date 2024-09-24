@@ -1,4 +1,4 @@
-package fileupload
+package file_upload
 
 import (
 	"github.com/twinj/uuid"

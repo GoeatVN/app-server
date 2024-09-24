@@ -1,11 +1,10 @@
-package persistence
+package database
 
 import (
 	"fmt"
 	"food-app/domain/entity"
 	"food-app/domain/repository"
 	"food-app/infrastructure/persistence"
-
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -16,9 +15,9 @@ type Repositories struct {
 	db   *gorm.DB
 }
 
-func NewRepositories(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) (*Repositories, error) {
-	DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
-	db, err := gorm.Open(Dbdriver, DBURL)
+func NewDatabase(Driver, DbUser, DbPassword, DbPort, DbHost, DbName string) (*Repositories, error) {
+	BURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
+	db, err := gorm.Open(Driver, BURL)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +36,6 @@ func (s *Repositories) Close() error {
 }
 
 // This migrate all tables
-func (s *Repositories) Automigrate() error {
+func (s *Repositories) DbMigrate() error {
 	return s.db.AutoMigrate(&entity.User{}, &entity.Food{}).Error
 }

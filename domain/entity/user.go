@@ -15,7 +15,9 @@ type User struct {
 	Email     string     `gorm:"size:100;not null;unique" json:"email"`
 	Password  string     `gorm:"size:100;not null;" json:"password"`
 	CreatedAt time.Time  `gorm:"default:CURRENT_TIMESTAMP" json:"created_at"`
+	CreatedBy string     `gorm:"size:100;not null;" json:"created_by"`
 	UpdatedAt time.Time  `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
+	UpdatedBy string     `gorm:"size:100;not null;" json:"updated_by"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
@@ -60,7 +62,9 @@ func (u *User) Prepare() {
 	u.LastName = html.EscapeString(strings.TrimSpace(u.LastName))
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
 	u.CreatedAt = time.Now()
+	u.CreatedBy = "Admin"
 	u.UpdatedAt = time.Now()
+	u.UpdatedBy = "Admin"
 }
 
 func (u *User) Validate(action string) map[string]string {

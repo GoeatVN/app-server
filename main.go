@@ -43,48 +43,21 @@ func main() {
 	tk := auth.NewToken()
 	fd := file_upload.NewFileUpload()
 
-	r := gin.Default()
-	r.Use(middleware2.CORSMiddleware()) //For CORS
-	r.Use(middleware2.LoggerMiddleware())
+	router := gin.Default()
+	router.Use(middleware2.CORSMiddleware()) //For CORS
+	router.Use(middleware2.LoggerMiddleware())
 	//For error handling
-	//r.Use(middleware2.ErrorHandler())
+	router.Use(middleware2.ErrorHandler())
 	//routes
-	//controller.RouterUser(db.User, redisService.Auth, tk)
-	//controller.RouterFood(db.Food, db.User, fd, redisService.Auth, tk)
-	//controller.RouterAuthenticate(db.User, redisService.Auth, tk)
 
-	users := controller.NewUsers(db.User, redisService.Auth, tk)
-	foods := controller.NewFood(db.Food, db.User, fd, redisService.Auth, tk)
-	authenticate := controller.NewAuthenticate(db.User, redisService.Auth, tk)
-	userRoutes := r.Group("/v1/users")
-	{
-		userRoutes.POST("", users.SaveUser)
-		userRoutes.GET("", users.GetUsers)
-		userRoutes.GET("/:user_id", users.GetUser)
-	}
-
-	//post routes
-	foodRoutes := r.Group("/v1/food")
-	{
-		foodRoutes.POST("", middleware2.AuthMiddleware(), middleware2.MaxSizeAllowed(8192000), foods.SaveFood)
-		foodRoutes.PUT("/:food_id", middleware2.AuthMiddleware(), middleware2.MaxSizeAllowed(8192000), foods.UpdateFood)
-		foodRoutes.GET("/:food_id", foods.GetFoodAndCreator)
-		foodRoutes.DELETE("/:food_id", middleware2.AuthMiddleware(), foods.DeleteFood)
-		foodRoutes.GET("", foods.GetAllFood)
-	}
-
-	//authentication routes
-	authentication := r.Group("/v1/auth")
-	{
-		authentication.POST("/login", authenticate.Login)
-		authentication.POST("/logout", authenticate.Logout)
-		authentication.POST("/refresh", authenticate.Refresh)
-	}
-
+	controller.RouterUser(router, db.User, redisService.Auth, tk)
+	controller.RouterFood(router, db.Food, db.User, fd, redisService.Auth, tk)
+	controller.RouterAuthenticate(router, db.User, redisService.Auth, tk)
+	
 	//Starting the application
 	appPort := os.Getenv("APP_PORT") //using heroku host
 	if appPort == "" {
 		appPort = "8888" //localhost
 	}
-	log.Fatal(r.Run(":" + appPort))
+	log.Fatal(router.Run(":" + appPort))
 }

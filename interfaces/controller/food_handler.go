@@ -22,9 +22,8 @@ type Food struct {
 }
 
 // tạo routes cho food
-func RouterFood(fApp application.FoodAppInterface, uApp application.UserAppInterface, fd file_upload.UploadFileInterface, rd auth.AuthInterface, tk auth.TokenInterface) *gin.Engine {
+func RouterFood(r *gin.Engine, fApp application.FoodAppInterface, uApp application.UserAppInterface, fd file_upload.UploadFileInterface, rd auth.AuthInterface, tk auth.TokenInterface) {
 	foods := NewFood(fApp, uApp, fd, rd, tk)
-	r := gin.Default()
 	foodRoutes := r.Group("/v1/foods")
 	{
 		foodRoutes.POST("", foods.SaveFood)
@@ -33,7 +32,6 @@ func RouterFood(fApp application.FoodAppInterface, uApp application.UserAppInter
 		foodRoutes.PUT("/:food_id", foods.UpdateFood)
 		foodRoutes.DELETE("/:food_id", foods.DeleteFood)
 	}
-	return r
 }
 
 // Food constructor

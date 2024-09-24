@@ -19,16 +19,15 @@ type Authenticate struct {
 }
 
 // tạo routes cho authenticate
-func RouterAuthenticate(uApp application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) *gin.Engine {
+func RouterAuthenticate(r *gin.Engine, uApp application.UserAppInterface, rd auth.AuthInterface, tk auth.TokenInterface) {
+
 	au := NewAuthenticate(uApp, rd, tk)
-	r := gin.Default()
 	autRoutes := r.Group("/v1/auth")
 	{
 		autRoutes.POST("/login", au.Login)
 		autRoutes.POST("/logout", au.Logout)
 		autRoutes.POST("/refresh", au.Refresh)
 	}
-	return r
 }
 
 // Authenticate constructor

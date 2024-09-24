@@ -12,7 +12,7 @@ func Init(database *gorm.DB) {
 	db = database
 }
 
-type ModelBase struct {
+type BaseEntity struct {
 	ID        uint64    `gorm:"primary_key;auto_increment" json:"id"`
 	CreatedBy string    `gorm:"size:255;not null " json:"createdBy"`
 	CreatedAt time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"createdAt"`
@@ -21,11 +21,11 @@ type ModelBase struct {
 	// DeletedAt *time.Time `sql:"index"`
 }
 
-//	func (base *ModelBase) BeforeCreate(db *gorm.DB) error {
+//	func (base *BaseEntity) BeforeCreate(db *gorm.DB) error {
 //		base.Id = uuid.NewString()
 //		return nil
 //	}
-func (base *ModelBase) Prepare() {
+func (base *BaseEntity) Prepare() {
 	// currentDateTime lấy time theo giờ UTC+7
 	currentDateTime := time.Now().UTC().Add(time.Hour * 7)
 	base.CreatedAt = currentDateTime

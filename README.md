@@ -197,3 +197,4 @@ Tương tự cho Product và Order.
 a. Gin Framework
 Mục đích: Khởi chạy server HTTP.
 Chức năng: Khởi tạo server với các route API và áp dụng các middleware.
+Run: go run ./cmd/api/main.go

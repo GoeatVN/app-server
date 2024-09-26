@@ -22,8 +22,8 @@ func NewHTTPServer(
 	router := gin.Default()
 
 	// Đăng ký các middleware
-	router.Use(middleware.LoggerMiddleware())          // Ghi log
-	router.Use(middleware.AuthMiddleware())            // Xác thực token
+	router.Use(middleware.LoggerMiddleware()) // Ghi log
+	//router.Use(middleware.AuthMiddleware())            // Xác thực token
 	router.Use(middleware.RateLimiterMiddleware())     // Giới hạn số lượng yêu cầu từ một IP
 	router.Use(middleware.ErrorHandler())              // Xử lý lỗi phát sinh
 	router.Use(middleware.ResponseHandlerMiddleware()) // Chuẩn hóa kết quả trả về
@@ -52,6 +52,7 @@ func (s *HTTPServer) setupRoutes() {
 	{
 		api.POST("/users", s.userHandler.CreateUser)
 		api.GET("/users/:id", s.userHandler.GetUsers)
+		api.GET("/users", s.userHandler.GetUserByID)
 		// Add other routes as needed
 	}
 }

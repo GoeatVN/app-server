@@ -4,6 +4,7 @@ import (
 	"app-server/internal/domain/entity"
 	"app-server/internal/usecase/user"
 	"app-server/pkg/response"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +27,26 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 	}
 	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
 	c.Set("response_data", users)
+}
+
+// lấy thông tin người dùng theo id
+func (h *UserHandler) GetUserByID(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		// Log the error and return a bad request response
+		c.Error(err)
+		return
+	}
+
+	user, err := h.service.GetUserByID(uint(id))
+	if err != nil {
+		// Ghi lại lỗi vào context để ErrorHandler xử lý
+		c.Error(err)
+		return
+	}
+	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
+	c.Set("response_data", user)
 }
 
 // Tạo người dùng mới

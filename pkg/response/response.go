@@ -8,7 +8,7 @@ import (
 
 // APIResponse định nghĩa phản hồi chuẩn cho API
 type APIResponse struct {
-	HttpStatus string      `json:"http_status"`
+	HttpStatus string      `json:"status"`
 	Errors     []Errors    `json:"errors,omitempty"`
 	Data       interface{} `json:"data,omitempty"`
 }

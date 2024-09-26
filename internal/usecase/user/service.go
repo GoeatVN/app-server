@@ -3,6 +3,7 @@ package user
 import (
 	"app-server/internal/domain/entity"
 	"app-server/internal/persistence/repository/postgres"
+	"fmt"
 )
 
 type ServiceInterface interface {
@@ -26,6 +27,7 @@ func (s *service) GetAllUsers() ([]entity.User, error) {
 }
 
 func (s *service) GetUserByID(id uint) (*entity.User, error) {
+	fmt.Println("service.GetUserByID")
 	return s.repo.FindByID(id)
 }
 

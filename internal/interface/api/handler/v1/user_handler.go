@@ -4,6 +4,7 @@ import (
 	"app-server/internal/domain/entity"
 	"app-server/internal/usecase/user"
 	"app-server/pkg/response"
+	"fmt"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -38,8 +39,10 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	fmt.Println("id", id)
 
 	user, err := h.service.GetUserByID(uint(id))
+	fmt.Println("user", user)
 	if err != nil {
 		// Ghi lại lỗi vào context để ErrorHandler xử lý
 		c.Error(err)

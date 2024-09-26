@@ -51,8 +51,8 @@ func (s *HTTPServer) setupRoutes() {
 	api := s.router.Group("/api")
 	{
 		api.POST("/users", s.userHandler.CreateUser)
-		api.GET("/users/:id", s.userHandler.GetUsers)
-		api.GET("/users", s.userHandler.GetUserByID)
+		api.GET("/users/", s.userHandler.GetUsers)
+		api.GET("/users/:id", s.userHandler.GetUserByID)
 		// Add other routes as needed
 	}
 }

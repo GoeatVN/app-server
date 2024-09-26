@@ -1,0 +1,14 @@
+app:
+  name: "AppServer"
+  port: 8080
+
+database:
+  host: "51.79.212.76"
+  port: 15432
+  name: "vcs"
+  user: "postgres"
+  password: "kD9gdhQh"
+
+jwt:
+  secret: "Acb@123456"
+  token_expiry: 3600

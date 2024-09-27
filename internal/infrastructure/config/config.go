@@ -18,11 +18,15 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host     string
-	Port     int
-	Name     string
-	User     string
-	Password string
+	Host         string
+	Port         int
+	Name         string
+	User         string
+	Password     string
+	SSLMode      string
+	MaxConns     int
+	MaxIdleConns int
+	MinConns     int
 }
 
 type JWTConfig struct {

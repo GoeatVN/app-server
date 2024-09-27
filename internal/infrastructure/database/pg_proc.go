@@ -1,6 +1,7 @@
 package database
 
 import (
+	"app-server/internal/infrastructure/config"
 	"context"
 	"database/sql"
 	"fmt"
@@ -16,54 +17,52 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Generic function to execute stored procedures with pgx v5
-func ExecuteStoredProcedure(conn *pgx.Conn, procedureName string, paramsStruct interface{}, resultStruct interface{}) error {
-	// Extract parameters from struct using reflection and pgParam tag
-	args, cursorName, err := extractParams(paramsStruct)
+/*
+Demo call procedure with cursor
+// Example of a struct result (each procedure can have different results)
+	type Result struct {
+		CntName        string    `pgColumn:"cnt_name" json:"cntName"`
+		CntInt         int       `pgColumn:"cnt_int" json:"cntInt"`
+		CntTest        string    `pgColumn:"cnt_test" json:"cntTest"`
+		CntDate        time.Time `pgColumn:"cnt_date" json:"cntDate"`
+		CntTimeStamp   time.Time `pgColumn:"cnt_timestamp"`
+		CntTime        time.Time `pgColumn:"cnt_time"`
+		CtnNumeric     float64   `pgColumn:"cnt_numeric"`
+		CtnBoolean     bool      `pgColumn:"cnt_boolean"`
+		CtnTimestampTz time.Time `pgColumn:"cnt_timestamptz"`
+		ctnTemp        float64   `pgColumn:"cnt_temp"`
+		CntId          int       `pgColumn:"cnt_id" json:"cntId"`
+	}
+	// Struct containing parameters with `pgParam` tags
+
+	type ContentParams struct {
+		CntId   int       `pgParam:"prm_id"`
+		CntName string    `pgParam:"prm_name"`
+		CntDate time.Time `pgParam:"prm_date"`
+		CurRef  string    `pgCur:"cur_ref"`
+	}
+	// Định nghĩa struct chứa tham số đầu vào cho stored procedure
+	params := ContentParams{
+		CntId:   1,
+		CntName: "thong",
+		CntDate: time.Now(),
+	}
+
+	// Khởi tạo slice để chứa kết quả trả về
+	var results []Result
+	results, err := persistence2.ExecuteStoredProcedureWithCursor[Result]("content_get_test", params)
 	if err != nil {
-		return fmt.Errorf("failed to extract parameters: %v", err)
+		fmt.Println("Lỗi khi gọi stored procedure: %v\n", err)
 	}
 
-	// Open a transaction with context
-	tx, err := conn.Begin(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
+	// In kết quả
+	for _, result := range results {
+		fmt.Printf("CntId: %d, CntTimeStamp: %s\n", result.CntId, result.CntTimeStamp)
+
 	}
-	defer tx.Rollback(context.Background())
+*/
 
-	// Call the stored procedure and capture the refcursor
-	if cursorName == "" {
-		cursorName = "ref_cur" // Default cursor name if not provided
-	}
-
-	err = tx.QueryRow(context.Background(), fmt.Sprintf("SELECT %s(%s)", procedureName, buildPlaceholders(len(args))), args...).Scan(&cursorName)
-	if err != nil {
-		return fmt.Errorf("failed to execute stored procedure: %v", err)
-	}
-
-	// Fetch all rows from the cursor
-	rows, err := tx.Query(context.Background(), fmt.Sprintf("FETCH ALL IN %s", cursorName))
-	if err != nil {
-		return fmt.Errorf("failed to fetch rows from cursor: %v", err)
-	}
-	defer rows.Close()
-
-	// Map the rows into resultStruct slice
-	err = mapRowsToStruct(rows, resultStruct)
-	if err != nil {
-		return fmt.Errorf("failed to map rows: %v", err)
-	}
-
-	// Commit the transaction
-	err = tx.Commit(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	return nil
-}
-
-func ExecuteStoredProcedureWithCursor[T any](procedureName string, paramsStruct interface{}) ([]T, error) {
+func ExecProcCursor[T any](procedureName string, paramsStruct interface{}) ([]T, error) {
 	ctx := context.Background()
 	// Sử dụng connection pool thay vì kết nối đơn
 	pool, err := connectToDBPool(ctx)
@@ -105,7 +104,7 @@ func ExecuteStoredProcedureWithCursor[T any](procedureName string, paramsStruct 
 			return nil, fmt.Errorf("failed to fetch from cursor: %w", err)
 		}
 
-		batchResult, err := mapRowsToSlice2[T](rows)
+		batchResult, err := mapRowsToSlice[T](rows)
 		//pgx.CollectRows(rows, pgx.RowToStructByName[T])
 		if err != nil {
 			return nil, fmt.Errorf("failed to collect rows: %w", err)
@@ -135,12 +134,18 @@ func ExecuteStoredProcedureWithCursor[T any](procedureName string, paramsStruct 
 }
 
 func connectToDBPool(ctx context.Context) (*pgxpool.Pool, error) {
-	connString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
-		os.Getenv("DB_HOST"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_USER"),
-		os.Getenv("DB_NAME"),
-		os.Getenv("DB_PASSWORD"))
+	connInfo, err := config.LoadConfig()
+
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+	connString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
+		connInfo.Database.Host,
+		connInfo.Database.User,
+		connInfo.Database.Password,
+		connInfo.Database.Name,
+		connInfo.Database.Port,
+	)
 
 	config, err := pgxpool.ParseConfig(connString)
 	if err != nil {
@@ -148,8 +153,8 @@ func connectToDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 	}
 
 	// Cấu hình pool (tùy chỉnh theo nhu cầu)
-	config.MaxConns = 10
-	config.MinConns = 2
+	config.MaxConns = int32(connInfo.Database.MaxConns)
+	config.MinConns = int32(connInfo.Database.MinConns)
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -158,129 +163,12 @@ func connectToDBPool(ctx context.Context) (*pgxpool.Pool, error) {
 
 	return pool, nil
 }
-func ExecuteStoredProcedureWithTable(procedureName string, paramsStruct interface{}, resultStruct interface{}) error {
-	// Kết nối db postgres
-	conn, err := connectToDB()
-	args, cursorName, err := extractParams(paramsStruct)
-	if err != nil {
-		return fmt.Errorf("failed to extract parameters: %v", err)
-	}
-
-	tx, err := conn.Begin(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to begin transaction: %v", err)
-	}
-	defer tx.Rollback(context.Background())
-
-	// Declare a cursor
-	cursorName = fmt.Sprintf("%s_cursor_%d", procedureName, time.Now().UnixNano())
-	_, err = tx.Exec(context.Background(), fmt.Sprintf("DECLARE %s CURSOR FOR SELECT * FROM %s(%s)", cursorName, procedureName, buildPlaceholders(len(args))), args...)
-	if err != nil {
-		return fmt.Errorf("failed to declare cursor: %v", err)
-	}
-
-	resultSlice := reflect.ValueOf(resultStruct).Elem()
-
-	for {
-		// Fetch a batch of rows
-		rows, err := tx.Query(context.Background(), fmt.Sprintf("FETCH %d FROM %s", 1000, cursorName))
-		if err != nil {
-			return fmt.Errorf("failed to fetch from cursor: %v", err)
-		}
-
-		batchResult := reflect.New(resultSlice.Type()).Elem()
-		err = mapRowsToStruct(rows, batchResult.Addr().Interface())
-		rows.Close()
-
-		if err != nil {
-			return fmt.Errorf("failed to map rows: %v", err)
-		}
-
-		if batchResult.Len() == 0 {
-			// No more rows
-			break
-		}
-
-		// Append batch result to the final result slice
-		resultSlice.Set(reflect.AppendSlice(resultSlice, batchResult))
-	}
-
-	err = tx.Commit(context.Background())
-	if err != nil {
-		return fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	return nil
-}
-func connectToDB() (conn *pgx.Conn, err error) {
-	host := os.Getenv("DB_HOST")
-	password := os.Getenv("DB_PASSWORD")
-	user := os.Getenv("DB_USER")
-	dbname := os.Getenv("DB_NAME")
-	port := os.Getenv("DB_PORT")
-	connInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
-		host,
-		port,
-		user,
-		dbname,
-		password)
-	// Kết nối đến database qua biến môi trường DATABASE_URL
-	conn, err = pgx.Connect(context.Background(), connInfo)
-	if err != nil {
-		log.Fatalf("Không thể kết nối đến database: %v\n", err)
-	}
-
-	return conn, err
-}
 
 func normalizeFieldName(name string) string {
 	return strings.ReplaceAll(strings.ToLower(name), "_", "")
 }
 
 func mapRowsToSlice[T any](rows pgx.Rows) ([]T, error) {
-	var results []T
-	resultType := reflect.TypeOf((*T)(nil)).Elem()
-
-	columnNames := rows.FieldDescriptions()
-	columnMap := make(map[string]int)
-	for i, col := range columnNames {
-		columnMap[normalizeFieldName(string(col.Name))] = i
-	}
-
-	for rows.Next() {
-		resultElement := reflect.New(resultType).Elem()
-		values := make([]interface{}, len(columnNames))
-		fieldPointers := make([]interface{}, len(columnNames))
-
-		for i := 0; i < resultType.NumField(); i++ {
-			fieldType := resultType.Field(i)
-			field := resultElement.Field(i)
-
-			columnName := fieldType.Tag.Get("pgColumn")
-			if columnName == "" {
-				columnName = normalizeFieldName(fieldType.Name)
-			}
-
-			if colIdx, ok := columnMap[columnName]; ok {
-				fieldPointers[colIdx] = field.Addr().Interface()
-				values[colIdx] = fieldPointers[colIdx]
-			}
-		}
-
-		err := rows.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("failed to scan row data: %v", err)
-		}
-		results = append(results, resultElement.Interface().(T))
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	return results, nil
-}
-func mapRowsToSlice2[T any](rows pgx.Rows) ([]T, error) {
 	var results []T
 	resultType := reflect.TypeOf((*T)(nil)).Elem()
 
@@ -384,48 +272,6 @@ func mapRowsToSlice2[T any](rows pgx.Rows) ([]T, error) {
 	return results, nil
 }
 
-// Helper function to map rows from cursor to result struct
-func mapRowsToStruct(rows pgx.Rows, resultStruct interface{}) error {
-	resultSlice := reflect.ValueOf(resultStruct).Elem()
-	elemType := resultSlice.Type().Elem()
-
-	columnNames := rows.FieldDescriptions()
-	columnMap := make(map[string]int)
-	for i, col := range columnNames {
-		columnMap[strings.ToLower(string(col.Name))] = i
-	}
-
-	for rows.Next() {
-		resultElement := reflect.New(elemType).Elem()
-		values := make([]interface{}, len(columnNames))
-		fieldPointers := make([]interface{}, len(columnNames))
-
-		for i := 0; i < elemType.NumField(); i++ {
-			fieldType := elemType.Field(i)
-			field := resultElement.Field(i)
-
-			columnName := fieldType.Tag.Get("pgColumn")
-			if columnName == "" {
-				columnName = strings.ToLower(fieldType.Name)
-			}
-
-			if colIdx, ok := columnMap[columnName]; ok {
-				fieldPointers[colIdx] = field.Addr().Interface()
-				values[colIdx] = fieldPointers[colIdx]
-			}
-		}
-
-		err := rows.Scan(values...)
-		if err != nil {
-			return fmt.Errorf("failed to scan row data: %v", err)
-		}
-
-		resultSlice.Set(reflect.Append(resultSlice, resultElement))
-	}
-
-	return nil
-}
-
 // Helper function to extract parameters from a struct using `pgParam` tags
 func extractParams(paramsStruct interface{}) ([]interface{}, string, error) {
 	val := reflect.ValueOf(paramsStruct)
@@ -471,4 +317,156 @@ func buildPlaceholders(count int) string {
 		}
 	}
 	return placeholders
+}
+
+// Generic function to execute stored procedures with pgx v5
+func ExecuteStoredProcedure_Not_Used(conn *pgx.Conn, procedureName string, paramsStruct interface{}, resultStruct interface{}) error {
+	// Extract parameters from struct using reflection and pgParam tag
+	args, cursorName, err := extractParams(paramsStruct)
+	if err != nil {
+		return fmt.Errorf("failed to extract parameters: %v", err)
+	}
+
+	// Open a transaction with context
+	tx, err := conn.Begin(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %v", err)
+	}
+	defer tx.Rollback(context.Background())
+
+	// Call the stored procedure and capture the refcursor
+	if cursorName == "" {
+		cursorName = "ref_cur" // Default cursor name if not provided
+	}
+
+	err = tx.QueryRow(context.Background(), fmt.Sprintf("SELECT %s(%s)", procedureName, buildPlaceholders(len(args))), args...).Scan(&cursorName)
+	if err != nil {
+		return fmt.Errorf("failed to execute stored procedure: %v", err)
+	}
+
+	// Fetch all rows from the cursor
+	rows, err := tx.Query(context.Background(), fmt.Sprintf("FETCH ALL IN %s", cursorName))
+	if err != nil {
+		return fmt.Errorf("failed to fetch rows from cursor: %v", err)
+	}
+	defer rows.Close()
+
+	// Map the rows into resultStruct slice
+	err = mapRowsToStruct_Not_Used(rows, resultStruct)
+	if err != nil {
+		return fmt.Errorf("failed to map rows: %v", err)
+	}
+
+	// Commit the transaction
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	return nil
+}
+func mapRowsToSlice_Not_Used[T any](rows pgx.Rows) ([]T, error) {
+	var results []T
+	resultType := reflect.TypeOf((*T)(nil)).Elem()
+
+	columnNames := rows.FieldDescriptions()
+	columnMap := make(map[string]int)
+	for i, col := range columnNames {
+		columnMap[normalizeFieldName(string(col.Name))] = i
+	}
+
+	for rows.Next() {
+		resultElement := reflect.New(resultType).Elem()
+		values := make([]interface{}, len(columnNames))
+		fieldPointers := make([]interface{}, len(columnNames))
+
+		for i := 0; i < resultType.NumField(); i++ {
+			fieldType := resultType.Field(i)
+			field := resultElement.Field(i)
+
+			columnName := fieldType.Tag.Get("pgColumn")
+			if columnName == "" {
+				columnName = normalizeFieldName(fieldType.Name)
+			}
+
+			if colIdx, ok := columnMap[columnName]; ok {
+				fieldPointers[colIdx] = field.Addr().Interface()
+				values[colIdx] = fieldPointers[colIdx]
+			}
+		}
+
+		err := rows.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan row data: %v", err)
+		}
+		results = append(results, resultElement.Interface().(T))
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// Helper function to map rows from cursor to result struct
+func mapRowsToStruct_Not_Used(rows pgx.Rows, resultStruct interface{}) error {
+	resultSlice := reflect.ValueOf(resultStruct).Elem()
+	elemType := resultSlice.Type().Elem()
+
+	columnNames := rows.FieldDescriptions()
+	columnMap := make(map[string]int)
+	for i, col := range columnNames {
+		columnMap[strings.ToLower(string(col.Name))] = i
+	}
+
+	for rows.Next() {
+		resultElement := reflect.New(elemType).Elem()
+		values := make([]interface{}, len(columnNames))
+		fieldPointers := make([]interface{}, len(columnNames))
+
+		for i := 0; i < elemType.NumField(); i++ {
+			fieldType := elemType.Field(i)
+			field := resultElement.Field(i)
+
+			columnName := fieldType.Tag.Get("pgColumn")
+			if columnName == "" {
+				columnName = strings.ToLower(fieldType.Name)
+			}
+
+			if colIdx, ok := columnMap[columnName]; ok {
+				fieldPointers[colIdx] = field.Addr().Interface()
+				values[colIdx] = fieldPointers[colIdx]
+			}
+		}
+
+		err := rows.Scan(values...)
+		if err != nil {
+			return fmt.Errorf("failed to scan row data: %v", err)
+		}
+
+		resultSlice.Set(reflect.Append(resultSlice, resultElement))
+	}
+
+	return nil
+}
+func connectToDB() (conn *pgx.Conn, err error) {
+	host := os.Getenv("DB_HOST")
+	password := os.Getenv("DB_PASSWORD")
+	user := os.Getenv("DB_USER")
+	dbname := os.Getenv("DB_NAME")
+	port := os.Getenv("DB_PORT")
+	connInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s",
+		host,
+		port,
+		user,
+		dbname,
+		password)
+	// Kết nối đến database qua biến môi trường DATABASE_URL
+	conn, err = pgx.Connect(context.Background(), connInfo)
+	if err != nil {
+		log.Fatalf("Không thể kết nối đến database: %v\n", err)
+	}
+
+	return conn, err
 }

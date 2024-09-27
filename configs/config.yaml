@@ -5,9 +5,10 @@ app:
 database:
   host: "51.79.212.76"
   port: 15432
-  name: "vcs"
+  name: "postgres"
   user: "postgres"
   password: "kD9gdhQh"
+  schema: "demovcs"
 
 jwt:
   secret: "Acb@123456"

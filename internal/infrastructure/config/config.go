@@ -21,6 +21,7 @@ type DatabaseConfig struct {
 	Name     string
 	User     string
 	Password string
+	Schema   string
 }
 
 type JWTConfig struct {

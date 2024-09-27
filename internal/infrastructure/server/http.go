@@ -10,14 +10,16 @@ import (
 )
 
 type HTTPServer struct {
-	router      *gin.Engine
-	config      *config.Config
-	userHandler *v1.UserHandler
+	router         *gin.Engine
+	config         *config.Config
+	userHandler    *v1.UserHandler
+	accountHandler *v1.AccountHandler
 }
 
 func NewHTTPServer(
 	config *config.Config,
 	userHandler *v1.UserHandler,
+	accountHandler *v1.AccountHandler,
 ) *HTTPServer {
 	router := gin.Default()
 
@@ -37,9 +39,10 @@ func NewHTTPServer(
 	// router.POST("/users", s.userHandler.CreateUser)
 
 	server := &HTTPServer{
-		router:      router,
-		config:      config,
-		userHandler: userHandler,
+		router:         router,
+		config:         config,
+		userHandler:    userHandler,
+		accountHandler: accountHandler,
 	}
 
 	server.setupRoutes()
@@ -53,6 +56,7 @@ func (s *HTTPServer) setupRoutes() {
 		api.POST("/users", s.userHandler.CreateUser)
 		api.GET("/users/", s.userHandler.GetUsers)
 		api.GET("/users/:id", s.userHandler.GetUserByID)
+		api.POST("/account/login", s.accountHandler.Login)
 		// Add other routes as needed
 	}
 }

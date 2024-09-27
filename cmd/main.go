@@ -1,11 +1,14 @@
 package main
 
 import (
+	"app-server/internal/domain/entity"
 	"app-server/internal/infrastructure/config"
 	"app-server/internal/infrastructure/database"
 	"app-server/internal/infrastructure/server"
 	"app-server/internal/interface/api/handler/v1"
+	"app-server/internal/persistence/repository"
 	"app-server/internal/persistence/repository/postgres"
+	"app-server/internal/usecase/account"
 	"app-server/internal/usecase/user"
 	"log"
 )
@@ -20,10 +23,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+
 	userRepository := postgres.NewUserRepository(db)
-	serviceInterface := user.NewService(userRepository)
-	userHandler := v1.NewUserHandler(serviceInterface)
-	server := server.NewHTTPServer(config, userHandler)
+	userServiceInterface := user.NewService(userRepository)
+	userHandler := v1.NewUserHandler(userServiceInterface)
+
+	// Account-related dependencies
+	accountRepository := repository.NewGenericBaseRepository[entity.UserRole](db)
+	accountServiceInterface := account.NewAccountService(userRepository, accountRepository)
+	accountHandler := v1.NewAccountHandler(accountServiceInterface)
+
+	server := server.NewHTTPServer(config, userHandler, accountHandler)
+
 	if err != nil {
 		log.Fatalf("Failed to initialize API: %v", err)
 	}

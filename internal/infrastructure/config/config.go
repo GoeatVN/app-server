@@ -8,6 +8,8 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	Redis    RedisConfig
+	Email    EmailConfig
 }
 
 type AppConfig struct {
@@ -26,6 +28,18 @@ type DatabaseConfig struct {
 type JWTConfig struct {
 	Secret      string
 	TokenExpiry int
+}
+type RedisConfig struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
+}
+type EmailConfig struct {
+	SMTPHost string
+	SMTPPort int
+	Username string
+	Password string
 }
 
 var Cfg Config

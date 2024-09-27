@@ -18,6 +18,7 @@ type HTTPServer struct {
 func NewHTTPServer(
 	config *config.Config,
 	userHandler *v1.UserHandler,
+	//redisCache *cache.RedisCache,
 ) *HTTPServer {
 	router := gin.Default()
 
@@ -27,6 +28,8 @@ func NewHTTPServer(
 	router.Use(middleware.RateLimiterMiddleware())     // Giới hạn số lượng yêu cầu từ một IP
 	router.Use(middleware.ErrorHandler())              // Xử lý lỗi phát sinh
 	router.Use(middleware.ResponseHandlerMiddleware()) // Chuẩn hóa kết quả trả về
+	// Đăng ký middleware caching và chuẩn hóa kết quả trả về
+	//router.Use(middleware.CachingMiddleware(s.redisCache, 10*time.Minute)) // Cache trong 10 phút
 
 	// Áp dụng middleware Authorization để giới hạn quyền truy cập cho vai trò "admin"
 	// adminGroup := router.Group("/admin")

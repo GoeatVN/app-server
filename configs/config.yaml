@@ -8,8 +8,21 @@ database:
   name: "postgres"
   user: "postgres"
   password: "kD9gdhQh"
+  maxConns: 10
+  maxIdleConns: 5
+  minConns: 5
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
   schema: "demovcs"
 
+email:
+  smtp_host: "smtp.gmail.com"
+  smtp_port: 587
+  username: "your-email@gmail.com"
+  password: "your-email-password"
 jwt:
   secret: "Acb@123456"
   token_expiry: 180 # minutes

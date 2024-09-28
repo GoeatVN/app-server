@@ -8,6 +8,8 @@ type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
 	JWT      JWTConfig
+	Redis    RedisConfig
+	Email    EmailConfig
 }
 
 type AppConfig struct {
@@ -22,11 +24,27 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Schema   string
+	SSLMode      string
+	MaxConns     int
+	MaxIdleConns int
+	MinConns     int
 }
 
 type JWTConfig struct {
 	Secret      string
 	TokenExpiry int "mapstructure:\"token_expiry\""
+}
+type RedisConfig struct {
+	Host     string
+	Port     int
+	Password string
+	DB       int
+}
+type EmailConfig struct {
+	SMTPHost string
+	SMTPPort int
+	Username string
+	Password string
 }
 
 var Cfg Config

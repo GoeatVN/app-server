@@ -12,4 +12,4 @@ database:
 
 jwt:
   secret: "Acb@123456"
-  token_expiry: 3600
+  token_expiry: 180 # minutes

@@ -18,18 +18,18 @@ func NewAccountHandler(accountService account.ServiceInterface) *AccountHandler 
 // Login handles user login
 func (h *AccountHandler) Login(c *gin.Context) {
 
-	var loginDto login.LoginDTO
+	var loginRequest login.LoginRequest
 
-	if err := c.ShouldBindJSON(&loginDto); err != nil {
+	if err := c.ShouldBindJSON(&loginRequest); err != nil {
 		response.ValidationError(c, err)
 		return
 	}
 
-	token, err := h.accountService.Login(loginDto)
+	loginResponse, err := h.accountService.Login(loginRequest)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	c.Set("response_data", token)
+	c.Set("response_data", loginResponse)
 }

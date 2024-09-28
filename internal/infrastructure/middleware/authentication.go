@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"app-server/internal/usecase/auth"
 	"net/http"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 )
 
 // AuthMiddleware kiểm tra Bearer token từ header HTTP
-func AuthMiddleware() gin.HandlerFunc {
+func AuthenticationMiddleware(authService auth.AuthServiceInterface) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 
@@ -23,19 +24,13 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// Kiểm tra token (bạn có thể thay bằng logic thực sự)
-		if !isValidToken(token) {
+		// Kiểm tra token bằng cách sử dụng authService
+		_, err := authService.VerifyToken(token)
+		if err != nil {
 			response.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid token")
 			c.Abort()
 			return
 		}
-
 		c.Next()
 	}
-}
-
-// Giả lập kiểm tra token
-func isValidToken(token string) bool {
-	// Thay thế bằng logic kiểm tra token thực sự
-	return token == "valid_token"
 }

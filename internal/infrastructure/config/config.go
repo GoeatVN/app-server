@@ -26,7 +26,7 @@ type DatabaseConfig struct {
 
 type JWTConfig struct {
 	Secret      string
-	TokenExpiry int
+	TokenExpiry int "mapstructure:\"token_expiry\""
 }
 
 var Cfg Config

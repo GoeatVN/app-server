@@ -8,6 +8,7 @@ database:
   name: "postgres"
   user: "postgres"
   password: "kD9gdhQh"
+  schema: "demovcs"
   maxConns: 10
   maxIdleConns: 5
   minConns: 5
@@ -16,7 +17,7 @@ redis:
   port: 6379
   password: ""
   db: 0
-  schema: "demovcs"
+
 
 email:
   smtp_host: "smtp.gmail.com"

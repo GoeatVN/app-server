@@ -30,10 +30,10 @@ func InitializeServer(config2 *config.Config) (*server.HTTPServer, error) {
 		return nil, err
 	}
 	userRepository := postgres.NewUserRepository(db)
-	serviceInterface := user.NewService(userRepository)
+	authServiceInterface := auth.NewAuthService(config2)
+	serviceInterface := user.NewService(userRepository, authServiceInterface)
 	userHandler := v1.NewUserHandler(serviceInterface)
 	genericBaseRepository := provideUserRoleRepo(db)
-	authServiceInterface := auth.NewAuthService(config2)
 	accountServiceInterface := account.NewAccountService(userRepository, genericBaseRepository, authServiceInterface)
 	accountHandler := v1.NewAccountHandler(accountServiceInterface)
 	repositoryGenericBaseRepository := provideRoleRepo(db)

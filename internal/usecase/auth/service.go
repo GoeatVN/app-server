@@ -3,8 +3,10 @@ package auth
 import (
 	"app-server/internal/domain/entity"
 	"app-server/internal/infrastructure/config"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -27,6 +29,8 @@ type AuthServiceInterface interface {
 	VerifyToken(tokenString string) (*jwt.Token, error)
 	GenerateJWT(userID uint, roleIDs []uint, username string) (string, error)
 	GetClaims(tokenString string) (*entity.AuthClaims, error)
+	HashPassword(password string) (string, error)
+	CheckPassword(hashedPassword, password string) error
 }
 
 // VerifyToken verifies the JWT token
@@ -93,4 +97,25 @@ func (s *authService) GetClaims(tokenString string) (*entity.AuthClaims, error) 
 
 	return claims, nil
 
+}
+
+// Hàm HashPassword để mã hóa mật khẩu
+func (s *authService) HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// CheckPassword kiểm tra xem mật khẩu nhập vào có khớp với mật khẩu đã mã hóa hay không
+func (s *authService) CheckPassword(hashedPassword, password string) error {
+	// So sánh mật khẩu đã nhập với mật khẩu đã mã hóa
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		// Nếu không khớp, trả về lỗi
+		return errors.New("mật khẩu không chính xác")
+	}
+	// Nếu khớp, trả về nil (không có lỗi)
+	return nil
 }

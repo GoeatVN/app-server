@@ -48,9 +48,8 @@ func (s *AuthMiddleware) AuthN() gin.HandlerFunc {
 }
 
 // Authorization kiểm tra quyền truy cập dựa trên vai trò người dùng
-func (s *AuthMiddleware) AuthZ(resource enum.ResourceCode, action enum.ActionCode) gin.HandlerFunc {
+func (s *AuthMiddleware) AuthZ(resource enum.ResourceCode, actions ...enum.ActionCode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		authHeader := c.GetHeader("Authorization")
 		// Kiểm tra header Authorization có chứa Bearer token không
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
@@ -77,8 +76,13 @@ func (s *AuthMiddleware) AuthZ(resource enum.ResourceCode, action enum.ActionCod
 
 		hasPermission := false
 		for _, perm := range perms {
-			if perm.ResourceCode == string(resource) && perm.ActionCode == string(action) {
-				hasPermission = true
+			for _, action := range actions {
+				if perm.ResourceCode == string(resource) && perm.ActionCode == string(action) {
+					hasPermission = true
+					break
+				}
+			}
+			if hasPermission {
 				break
 			}
 		}

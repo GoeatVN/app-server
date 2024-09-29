@@ -76,17 +76,19 @@ func (s *HTTPServer) setupRoutes() {
 	{
 		api.Use(authMiddleware.AuthN())
 
-		api.POST("/users", authMiddleware.AuthZ(enum.Resource.User, enum.Action.Create), s.userHandler.CreateUser)
-		api.GET("/users/", s.userHandler.GetUsers)
-		api.GET("/users/:id", s.userHandler.GetUserByID)
+		api.GET("/users", authMiddleware.AuthZ(enum.Resource.User, enum.Action.View), s.userHandler.GetAllUsers)
+		api.GET("/users/:id", authMiddleware.AuthZ(enum.Resource.User, enum.Action.View), s.userHandler.GetUserByID)
+		api.POST("/users/add", authMiddleware.AuthZ(enum.Resource.User, enum.Action.Add), s.userHandler.CreateUser)
+		api.POST("/users/:id/modify", authMiddleware.AuthZ(enum.Resource.User, enum.Action.Update), s.userHandler.UpdateUser)
+		api.GET("/users/:id/perms", authMiddleware.AuthZ(enum.Resource.User, enum.Action.View), s.rolePermHandler.GetPermsByUserID)
 
-		api.POST("/roles", s.rolePermHandler.AddNewRole)
-		api.POST("/roles/modify", s.rolePermHandler.ModifyRole)
-		api.POST("/roles/asign-role", s.rolePermHandler.AssignRoleToUser)
-		api.GET("/role-perm", s.rolePermHandler.GetAllRolePerms)
-		api.GET("/role-perm/:id", s.rolePermHandler.GetRolePermsById)
-		api.GET("/role-perm/group-resource", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetGroupResources)
-		api.GET("/user-perm/:id", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetPermsByUserID)
+		api.GET("/roles/group-by-resource", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetRoleGroupByResource)
+		api.GET("/roles", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetAllRolePerms)
+		api.GET("/roles/:id", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetRolePermsById)
+		api.POST("/roles/add", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Add, enum.Action.Update), s.rolePermHandler.AddNewRole)
+		api.POST("/roles/:id/modify", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Update), s.rolePermHandler.ModifyRole)
+		api.POST("/roles/asign-role", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Add, enum.Action.Update), s.rolePermHandler.AssignRoleToUser)
+
 		// Add other routes as needed
 	}
 }

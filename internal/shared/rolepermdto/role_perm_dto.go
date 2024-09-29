@@ -8,7 +8,6 @@ type AddNewRoleRequest struct {
 }
 
 type ModifyRoleRequest struct {
-	RoleID   uint   `json:"role_id"`
 	RoleName string `json:"role_name"`
 	PermIDs  []uint `json:"perm_ids"`
 }

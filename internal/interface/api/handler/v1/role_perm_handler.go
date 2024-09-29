@@ -37,7 +37,13 @@ func (h *RolePermHandler) ModifyRole(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
-	if err := h.rolePermService.ModifyRole(modifyRoleRequest); err != nil {
+	idStr := c.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	if err := h.rolePermService.ModifyRole(uint(id), modifyRoleRequest); err != nil {
 		c.Error(err)
 		return
 	}
@@ -82,8 +88,8 @@ func (h *RolePermHandler) GetRolePermsById(c *gin.Context) {
 	c.Set("response_data", perms)
 }
 
-func (h *RolePermHandler) GetGroupResources(c *gin.Context) {
-	perms, err := h.rolePermService.GetGroupResources()
+func (h *RolePermHandler) GetRoleGroupByResource(c *gin.Context) {
+	perms, err := h.rolePermService.GetRoleGroupByResource()
 	if err != nil {
 		c.Error(err)
 		return

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"app-server/internal/domain/entity"
+	"app-server/internal/shared/userdto"
 	"app-server/internal/usecase/user"
 	"app-server/pkg/response"
 	"fmt"
@@ -19,7 +20,7 @@ func NewUserHandler(service user.ServiceInterface) *UserHandler {
 }
 
 // Lấy danh sách người dùng
-func (h *UserHandler) GetUsers(c *gin.Context) {
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.service.GetAllUsers()
 	if err != nil {
 		// Ghi lại lỗi vào context và để ErrorHandler xử lý
@@ -54,13 +55,31 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 
 // Tạo người dùng mới
 func (h *UserHandler) CreateUser(c *gin.Context) {
+	var request userdto.AddUserRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		// Gọi trực tiếp response.ValidationError
+		response.ValidationError(c, err)
+		return
+	}
+	message, err := h.service.CreateUser(&request)
+	if err != nil {
+		// Ghi lại lỗi vào context để ErrorHandler xử lý
+		c.Error(err)
+		return
+	}
+	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
+	c.Set("response_data", message)
+}
+
+// Cập nhật thông tin người dùng
+func (h *UserHandler) UpdateUser(c *gin.Context) {
 	var user entity.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		// Gọi trực tiếp response.ValidationError
 		response.ValidationError(c, err)
 		return
 	}
-	err := h.service.CreateUser(&user)
+	err := h.service.UpdateUser(&user)
 	if err != nil {
 		// Ghi lại lỗi vào context để ErrorHandler xử lý
 		c.Error(err)

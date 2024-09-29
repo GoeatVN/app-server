@@ -21,10 +21,10 @@ type rolePermService struct {
 
 type RolePermServiceInterface interface {
 	AddNewRole(request rolepermdto.AddNewRoleRequest) error
-	ModifyRole(request rolepermdto.ModifyRoleRequest) error
+	ModifyRole(roleId uint, request rolepermdto.ModifyRoleRequest) error
 	AssignRoleToUser(request rolepermdto.AssignRoleToUserRequest) error
 	GetRolePerms(id uint) ([]rolepermdto.GetRolePermsResponse, error)
-	GetGroupResources() ([]rolepermdto.GroupedResourcesReponse, error)
+	GetRoleGroupByResource() ([]rolepermdto.GroupedResourcesReponse, error)
 	GetPermsByUserID(userID uint) ([]rolepermdto.GetPermByUserIdResult, error)
 }
 
@@ -60,8 +60,8 @@ func (s *rolePermService) AddNewRole(request rolepermdto.AddNewRoleRequest) erro
 	return nil
 }
 
-func (s *rolePermService) ModifyRole(request rolepermdto.ModifyRoleRequest) error {
-	role, err := s.roleRepo.FindByID(request.RoleID)
+func (s *rolePermService) ModifyRole(roleId uint, request rolepermdto.ModifyRoleRequest) error {
+	role, err := s.roleRepo.FindByID(roleId)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (s *rolePermService) ModifyRole(request rolepermdto.ModifyRoleRequest) erro
 
 	// Retrieve existing role permissions
 	var existingRolePerms []entity.RolePermission
-	if err := s.rolePermission.Where("role_id = ?", request.RoleID).Find(&existingRolePerms).Error; err != nil {
+	if err := s.rolePermission.Where("role_id = ?", roleId).Find(&existingRolePerms).Error; err != nil {
 		return err
 	}
 
@@ -86,7 +86,7 @@ func (s *rolePermService) ModifyRole(request rolepermdto.ModifyRoleRequest) erro
 	// Insert new permissions
 	for _, permID := range request.PermIDs {
 		if !existingPermIDs[permID] {
-			rolePerm := entity.RolePermission{RoleID: request.RoleID, PermissionID: permID}
+			rolePerm := entity.RolePermission{RoleID: roleId, PermissionID: permID}
 			if err := s.rolePermission.Create(&rolePerm); err != nil {
 				return err
 			}
@@ -96,7 +96,7 @@ func (s *rolePermService) ModifyRole(request rolepermdto.ModifyRoleRequest) erro
 
 	// Delete permissions that are no longer needed
 	for permID := range existingPermIDs {
-		if err := s.rolePermission.Where("role_id = ? AND permission_id = ?", request.RoleID, permID).Delete(&entity.RolePermission{}).Error; err != nil {
+		if err := s.rolePermission.Where("role_id = ? AND permission_id = ?", roleId, permID).Delete(&entity.RolePermission{}).Error; err != nil {
 			return err
 		}
 	}
@@ -186,7 +186,7 @@ func (s *rolePermService) GetRolePerms(id uint) ([]rolepermdto.GetRolePermsRespo
 	return result, nil
 }
 
-func (s *rolePermService) GetGroupResources() ([]rolepermdto.GroupedResourcesReponse, error) {
+func (s *rolePermService) GetRoleGroupByResource() ([]rolepermdto.GroupedResourcesReponse, error) {
 	var rows []struct {
 		ResourceID   uint
 		ResourceName string

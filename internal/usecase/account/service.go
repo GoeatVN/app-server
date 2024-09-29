@@ -30,7 +30,7 @@ func (s *accountService) Login(loginDto login.LoginRequest) (*login.LoginRespons
 	}
 
 	// Compare hashed password with plain text password
-	if user.Password != loginDto.Password {
+	if s.authService.CheckPassword(user.Password, loginDto.Password) != nil {
 		return nil, fmt.Errorf("invalid credentials")
 	}
 

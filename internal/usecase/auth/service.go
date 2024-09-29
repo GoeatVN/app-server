@@ -26,7 +26,7 @@ type Claims struct {
 }
 
 type AuthServiceInterface interface {
-	VerifyToken(tokenString string) (*jwt.Token, error)
+	VerifyToken(tokenString string) (*entity.AuthClaims, error)
 	GenerateJWT(userID uint, roleIDs []uint, username string) (string, error)
 	GetClaims(tokenString string) (*entity.AuthClaims, error)
 	HashPassword(password string) (string, error)
@@ -34,20 +34,26 @@ type AuthServiceInterface interface {
 }
 
 // VerifyToken verifies the JWT token
-func (s *authService) VerifyToken(tokenString string) (*jwt.Token, error) {
-	// Parse the JWT token
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func (s *authService) VerifyToken(tokenString string) (*entity.AuthClaims, error) {
+	// Parse the JWT token with custom claims
+	token, err := jwt.ParseWithClaims(tokenString, &entity.AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Check the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(s.config.JWT.Secret), nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
 
-	return token, nil
+	// Kiểm tra token có hợp lệ không và có chứa claims không
+	if claims, ok := token.Claims.(*entity.AuthClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("invalid token or claims")
+	}
 }
 
 func (s *authService) GenerateJWT(userID uint, roleIDs []uint, username string) (string, error) {

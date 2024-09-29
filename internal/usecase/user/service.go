@@ -6,6 +6,7 @@ import (
 	"app-server/internal/shared/userdto"
 	"app-server/internal/usecase/auth"
 	"fmt"
+	"gorm.io/gorm"
 )
 
 type ServiceInterface interface {
@@ -19,10 +20,11 @@ type ServiceInterface interface {
 type service struct {
 	repo        *postgres.UserRepository
 	authService auth.AuthServiceInterface
+	db          *gorm.DB
 }
 
-func NewService(repo *postgres.UserRepository, authService auth.AuthServiceInterface) ServiceInterface {
-	return &service{repo: repo, authService: authService}
+func NewService(repo *postgres.UserRepository, authService auth.AuthServiceInterface, db *gorm.DB) ServiceInterface {
+	return &service{repo: repo, authService: authService, db: db}
 }
 
 func (s *service) GetAllUsers() ([]entity.User, error) {
@@ -35,25 +37,56 @@ func (s *service) GetUserByID(id uint) (*entity.User, error) {
 }
 
 func (s *service) CreateUser(request *userdto.AddUserRequest) (string, error) {
-	// Mã hóa mật khẩu
+	// Hash the password
 	hashedPassword, err := s.authService.HashPassword(request.Password)
 	if err != nil {
-		return "", err // Trả về lỗi nếu mã hóa thất bại
-	}
-	// Tạo đối tượng User mới
-	newUser := &entity.User{
-		Username: request.Username,
-		Password: hashedPassword,
-		Email:    request.Email,
-		Phone:    request.Phone,
+		return "", err // Return error if hashing fails
 	}
 
-	errCreate := s.repo.Create(newUser)
-	if errCreate != nil {
-		return "", errCreate
+	type Result struct {
+		IsSuccess    bool
+		ErrorCode    int
+		ErrorMessage string
 	}
 
-	return "Tạo người dùng thành công", nil
+	var isSuccess bool
+	var errorCode int
+	var errorMessage string
+
+	// Execute the CALL statement
+	err = s.db.Exec(`
+        CALL demovcs.create_user(?, ?, ?, ?, ?, ?, ?, ?, ?);
+    `,
+		request.Username,
+		hashedPassword,
+		request.Email,
+		request.Phone,
+		request.Fullname,
+		request.CreatedBy,
+		gorm.Expr("?", &isSuccess),
+		gorm.Expr("?", &errorCode),
+		gorm.Expr("?", &errorMessage),
+	).Error
+
+	// Tạo đối tượng kết quả
+	type CreateUserResult struct {
+		IsSuccess    bool
+		ErrorCode    int
+		ErrorMessage string
+	}
+	result := CreateUserResult{
+		IsSuccess:    isSuccess,
+		ErrorCode:    errorCode,
+		ErrorMessage: errorMessage,
+	}
+
+	// In kết quả
+	fmt.Printf("Is Success: %v\n", result.IsSuccess)
+	fmt.Printf("Error Code: %d\n", result.ErrorCode)
+	fmt.Printf("Error Message: %s\n", result.ErrorMessage)
+
+	// Lấy giá trị của các tham số OUT
+	return "User created successfully", nil
 }
 
 func (s *service) UpdateUser(user *entity.User) error {

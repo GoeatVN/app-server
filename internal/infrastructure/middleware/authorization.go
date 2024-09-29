@@ -4,6 +4,7 @@ import (
 	"app-server/internal/domain/enum"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
+	"app-server/internal/utils"
 	"app-server/pkg/response"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -37,12 +38,14 @@ func (s *AuthMiddleware) AuthN() gin.HandlerFunc {
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		// Kiểm tra token bằng cách sử dụng authService
-		_, err := s.AuthService.VerifyToken(token)
+		claims, err := s.AuthService.VerifyToken(token)
 		if err != nil {
 			response.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid token")
 			c.Abort()
 			return
 		}
+		// Lưu claims vào Gin context để dùng sau
+		c.Set("tokenClaims", claims)
 		c.Next()
 	}
 }
@@ -50,19 +53,10 @@ func (s *AuthMiddleware) AuthN() gin.HandlerFunc {
 // Authorization kiểm tra quyền truy cập dựa trên vai trò người dùng
 func (s *AuthMiddleware) AuthZ(resource enum.ResourceCode, actions ...enum.ActionCode) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		// Kiểm tra header Authorization có chứa Bearer token không
-		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			response.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "Missing or invalid token")
-			c.Abort()
-			return
-		}
-
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
-
-		claim, err := s.AuthService.GetClaims(tokenString)
-		if err != nil {
-			response.Error(c, http.StatusUnauthorized, "UNAUTHORIZED", "Invalid token")
+		// Lấy claims từ Gin context (đã lưu trong AuthN)
+		claim, errGetClaim := utils.GetAuthClaims(c)
+		if errGetClaim != nil {
+			response.Error(c, errGetClaim.HTTPCode, errGetClaim.Code, errGetClaim.Message)
 			c.Abort()
 			return
 		}

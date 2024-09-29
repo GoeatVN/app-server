@@ -4,6 +4,7 @@ import (
 	"app-server/internal/domain/entity"
 	"app-server/internal/shared/userdto"
 	"app-server/internal/usecase/user"
+	"app-server/internal/utils"
 	"app-server/pkg/response"
 	"fmt"
 	"strconv"
@@ -61,6 +62,16 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		response.ValidationError(c, err)
 		return
 	}
+
+	// Lấy claims từ Gin context (đã lưu trong AuthN)
+	claims, errGetClaim := utils.GetAuthClaims(c)
+	if errGetClaim != nil {
+		response.Error(c, errGetClaim.HTTPCode, errGetClaim.Code, errGetClaim.Message)
+		return
+	}
+
+	request.CreatedBy = claims.Username
+
 	message, err := h.service.CreateUser(&request)
 	if err != nil {
 		// Ghi lại lỗi vào context để ErrorHandler xử lý

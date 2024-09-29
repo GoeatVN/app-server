@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"app-server/internal/domain/entity"
 	"app-server/internal/infrastructure/config"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
@@ -25,7 +26,7 @@ type Claims struct {
 type AuthServiceInterface interface {
 	VerifyToken(tokenString string) (*jwt.Token, error)
 	GenerateJWT(userID uint, roleIDs []uint, username string) (string, error)
-	GetClaims(tokenString string) (*Claims, error)
+	GetClaims(tokenString string) (*entity.AuthClaims, error)
 }
 
 // VerifyToken verifies the JWT token
@@ -50,7 +51,7 @@ func (s *authService) GenerateJWT(userID uint, roleIDs []uint, username string) 
 	// Set token expiration time
 	expirationTime := time.Now().Add(time.Minute * time.Duration(s.config.JWT.TokenExpiry))
 	// Create the JWT claims, which includes the user ID, role IDs, and username
-	claims := &Claims{
+	claims := &entity.AuthClaims{
 		UserID:   userID,
 		RoleIDs:  roleIDs,
 		Username: username,
@@ -71,9 +72,9 @@ func (s *authService) GenerateJWT(userID uint, roleIDs []uint, username string) 
 	return tokenString, nil
 }
 
-func (s *authService) GetClaims(tokenString string) (*Claims, error) {
+func (s *authService) GetClaims(tokenString string) (*entity.AuthClaims, error) {
 	// Parse the JWT token
-	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &entity.AuthClaims{}, func(token *jwt.Token) (interface{}, error) {
 		// Check the signing method
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -85,7 +86,7 @@ func (s *authService) GetClaims(tokenString string) (*Claims, error) {
 	}
 
 	// Get the claims
-	claims, ok := token.Claims.(*Claims)
+	claims, ok := token.Claims.(*entity.AuthClaims)
 	if !ok {
 		return nil, fmt.Errorf("invalid token claims")
 	}

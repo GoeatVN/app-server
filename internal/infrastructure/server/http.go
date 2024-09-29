@@ -1,29 +1,35 @@
 package server
 
 import (
+	"app-server/internal/domain/enum"
 	"app-server/internal/infrastructure/config"
 	"app-server/internal/infrastructure/middleware"
 	"app-server/internal/interface/api/handler/v1"
 	"app-server/internal/usecase/auth"
+	"app-server/internal/usecase/rolepermission"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
 
 type HTTPServer struct {
-	router         *gin.Engine
-	config         *config.Config
-	userHandler    *v1.UserHandler
-	accountHandler *v1.AccountHandler
-	authService    auth.AuthServiceInterface
+	router          *gin.Engine
+	config          *config.Config
+	userHandler     *v1.UserHandler
+	accountHandler  *v1.AccountHandler
+	authService     auth.AuthServiceInterface
+	rolePermService rolepermission.RolePermServiceInterface
+	rolePermHandler *v1.RolePermHandler
 }
 
 func NewHTTPServer(
 	config *config.Config,
 	userHandler *v1.UserHandler,
 	accountHandler *v1.AccountHandler,
+	rolePermHandler *v1.RolePermHandler,
 	authService auth.AuthServiceInterface,
-	//redisCache *cache.RedisCache,
+	rolePermService rolepermission.RolePermServiceInterface,
+	// redisCache *cache.RedisCache,
 ) *HTTPServer {
 	router := gin.Default()
 
@@ -45,11 +51,13 @@ func NewHTTPServer(
 	// router.POST("/users", s.userHandler.CreateUser)
 
 	server := &HTTPServer{
-		router:         router,
-		config:         config,
-		userHandler:    userHandler,
-		accountHandler: accountHandler,
-		authService:    authService,
+		router:          router,
+		config:          config,
+		userHandler:     userHandler,
+		accountHandler:  accountHandler,
+		authService:     authService,
+		rolePermService: rolePermService,
+		rolePermHandler: rolePermHandler,
 	}
 
 	server.setupRoutes()
@@ -61,13 +69,24 @@ func (s *HTTPServer) setupRoutes() {
 	// Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
 	s.router.POST("/api/account/login", s.accountHandler.Login)
 
+	// Create middleware auth
+	authMiddleware := middleware.NewAuthMiddleware(s.authService, s.rolePermService)
+
 	api := s.router.Group("/api")
 	{
-		api.Use(middleware.AuthenticationMiddleware(s.authService))
+		api.Use(authMiddleware.AuthN())
 
-		api.POST("/users", s.userHandler.CreateUser)
+		api.POST("/users", authMiddleware.AuthZ(enum.Resource.User, enum.Action.Create), s.userHandler.CreateUser)
 		api.GET("/users/", s.userHandler.GetUsers)
 		api.GET("/users/:id", s.userHandler.GetUserByID)
+
+		api.POST("/roles", s.rolePermHandler.AddNewRole)
+		api.POST("/roles/modify", s.rolePermHandler.ModifyRole)
+		api.POST("/roles/asign-role", s.rolePermHandler.AssignRoleToUser)
+		api.GET("/role-perm", s.rolePermHandler.GetAllRolePerms)
+		api.GET("/role-perm/:id", s.rolePermHandler.GetRolePermsById)
+		api.GET("/role-perm/group-resource", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetGroupResources)
+		api.GET("/user-perm/:id", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetPermsByUserID)
 		// Add other routes as needed
 	}
 }

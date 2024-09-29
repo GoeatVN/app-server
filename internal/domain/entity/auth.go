@@ -1,5 +1,7 @@
 package entity
 
+import "github.com/dgrijalva/jwt-go"
+
 type User struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
 	Username string `gorm:"column:username" json:"username"`
@@ -77,4 +79,12 @@ type RolePermission struct {
 
 func (RolePermission) TableName() string {
 	return "role_permissions"
+}
+
+// Struct Claims chứa thông tin của người dùng và các quyền
+type AuthClaims struct {
+	UserID   uint   `json:"user_id"`
+	RoleIDs  []uint `json:"role_ids"`
+	Username string `json:"username"`
+	jwt.StandardClaims
 }

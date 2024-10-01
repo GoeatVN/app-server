@@ -52,7 +52,8 @@ func provideActionRepo(db *gorm.DB) *repository.GenericBaseRepository[entity.Act
 // InitializeServer injects all dependencies and returns Server
 func InitializeServer(config *config.Config) (*server.HTTPServer, error) {
 	wire.Build(
-		database.Connect,           // Inject database connection
+		database.Connect, // Inject database connection
+		database.ConnectToDBPool,
 		postgres.NewUserRepository, // Inject UserRepository
 		provideUserRoleRepo,
 		provideRoleRepo,

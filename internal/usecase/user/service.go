@@ -5,7 +5,9 @@ import (
 	"app-server/internal/persistence/repository/postgres"
 	"app-server/internal/shared/userdto"
 	"app-server/internal/usecase/auth"
+	"context"
 	"fmt"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
 )
 
@@ -21,10 +23,11 @@ type service struct {
 	repo        *postgres.UserRepository
 	authService auth.AuthServiceInterface
 	db          *gorm.DB
+	dbPool      *pgxpool.Pool
 }
 
-func NewService(repo *postgres.UserRepository, authService auth.AuthServiceInterface, db *gorm.DB) ServiceInterface {
-	return &service{repo: repo, authService: authService, db: db}
+func NewService(repo *postgres.UserRepository, authService auth.AuthServiceInterface, db *gorm.DB, dbPool *pgxpool.Pool) ServiceInterface {
+	return &service{repo: repo, authService: authService, db: db, dbPool: dbPool}
 }
 
 func (s *service) GetAllUsers() ([]entity.User, error) {
@@ -43,52 +46,37 @@ func (s *service) CreateUser(request *userdto.AddUserRequest) (string, error) {
 		return "", err // Return error if hashing fails
 	}
 
-	type Result struct {
-		IsSuccess    bool
-		ErrorCode    int
-		ErrorMessage string
-	}
-
+	// Define the OUT parameters
 	var isSuccess bool
 	var errorCode int
 	var errorMessage string
 
-	// Execute the CALL statement
-	err = s.db.Exec(`
-        CALL demovcs.create_user(?, ?, ?, ?, ?, ?, ?, ?, ?);
-    `,
+	// Call the stored procedure using QueryRow
+	err = s.dbPool.QueryRow(
+		context.Background(),
+		"CALL create_user($1, $2, $3, $4, $5, $6, $7, $8, $9)",
 		request.Username,
 		hashedPassword,
 		request.Email,
 		request.Phone,
 		request.Fullname,
 		request.CreatedBy,
-		gorm.Expr("?", &isSuccess),
-		gorm.Expr("?", &errorCode),
-		gorm.Expr("?", &errorMessage),
-	).Error
+		&isSuccess,
+		&errorCode,
+		&errorMessage,
+	).Scan(&isSuccess, &errorCode, &errorMessage)
 
-	// Tạo đối tượng kết quả
-	type CreateUserResult struct {
-		IsSuccess    bool
-		ErrorCode    int
-		ErrorMessage string
-	}
-	result := CreateUserResult{
-		IsSuccess:    isSuccess,
-		ErrorCode:    errorCode,
-		ErrorMessage: errorMessage,
+	if err != nil {
+		return "", fmt.Errorf("failed to execute procedure: %v", err)
 	}
 
-	// In kết quả
-	fmt.Printf("Is Success: %v\n", result.IsSuccess)
-	fmt.Printf("Error Code: %d\n", result.ErrorCode)
-	fmt.Printf("Error Message: %s\n", result.ErrorMessage)
+	// Check the result
+	if !isSuccess {
+		return "", fmt.Errorf("Error Code: %d, Message: %s", errorCode, errorMessage)
+	}
 
-	// Lấy giá trị của các tham số OUT
 	return "User created successfully", nil
 }
-
 func (s *service) UpdateUser(user *entity.User) error {
 	return s.repo.Update(user)
 }

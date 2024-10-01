@@ -31,7 +31,11 @@ func InitializeServer(config2 *config.Config) (*server.HTTPServer, error) {
 	}
 	userRepository := postgres.NewUserRepository(db)
 	authServiceInterface := auth.NewAuthService(config2)
-	serviceInterface := user.NewService(userRepository, authServiceInterface, db)
+	pool, err := database.ConnectToDBPool()
+	if err != nil {
+		return nil, err
+	}
+	serviceInterface := user.NewService(userRepository, authServiceInterface, db, pool)
 	userHandler := v1.NewUserHandler(serviceInterface)
 	genericBaseRepository := provideUserRoleRepo(db)
 	accountServiceInterface := account.NewAccountService(userRepository, genericBaseRepository, authServiceInterface)
@@ -41,7 +45,7 @@ func InitializeServer(config2 *config.Config) (*server.HTTPServer, error) {
 	genericBaseRepository3 := providePermissionRepo(db)
 	genericBaseRepository4 := provideResourceRepo(db)
 	genericBaseRepository5 := provideActionRepo(db)
-	rolePermServiceInterface := rolepermission.NewRolePermService(userRepository, genericBaseRepository, repositoryGenericBaseRepository, genericBaseRepository2, genericBaseRepository3, genericBaseRepository4, genericBaseRepository5, db)
+	rolePermServiceInterface := rolepermission.NewRolePermService(userRepository, genericBaseRepository, repositoryGenericBaseRepository, genericBaseRepository2, genericBaseRepository3, genericBaseRepository4, genericBaseRepository5, db, pool)
 	rolePermHandler := v1.NewRolePermHandler(rolePermServiceInterface)
 	httpServer := server.NewHTTPServer(config2, userHandler, accountHandler, rolePermHandler, authServiceInterface, rolePermServiceInterface)
 	return httpServer, nil

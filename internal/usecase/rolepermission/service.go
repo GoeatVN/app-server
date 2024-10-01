@@ -5,6 +5,7 @@ import (
 	"app-server/internal/persistence/repository"
 	"app-server/internal/persistence/repository/postgres"
 	"app-server/internal/shared/rolepermdto"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +18,7 @@ type rolePermService struct {
 	resourceRepo   *repository.GenericBaseRepository[entity.Resource]
 	actionRepo     *repository.GenericBaseRepository[entity.Action]
 	db             *gorm.DB
+	pool           *pgxpool.Pool
 }
 
 type RolePermServiceInterface interface {
@@ -36,12 +38,13 @@ func NewRolePermService(userRepo *postgres.UserRepository,
 	resourceRepo *repository.GenericBaseRepository[entity.Resource],
 	actionRepo *repository.GenericBaseRepository[entity.Action],
 	db *gorm.DB,
+	pool *pgxpool.Pool,
 ) RolePermServiceInterface {
 	return &rolePermService{userRepo: userRepo,
 		userRoleRepo: userRoleRepo, roleRepo: roleRepo,
 		rolePermission: rolePermission,
 		permRepo:       permRepo, resourceRepo: resourceRepo,
-		actionRepo: actionRepo, db: db}
+		actionRepo: actionRepo, db: db, pool: pool}
 }
 
 func (s *rolePermService) AddNewRole(request rolepermdto.AddNewRoleRequest) error {
@@ -199,9 +202,9 @@ func (s *rolePermService) GetRoleGroupByResource() ([]rolepermdto.GroupedResourc
 
 	// SQL query to fetch permissions, resources, and actions
 	query := `
-		SELECT 
-			p.id AS perm_id, p.permission_name AS perm_name, p.permission_code AS perm_code, 
-			r.id AS resource_id, r.resource_name, 
+		SELECT
+			p.id AS perm_id, p.permission_name AS perm_name, p.permission_code AS perm_code,
+			r.id AS resource_id, r.resource_name,
 			a.id AS action_id, a.action_name
 		FROM permissions p
 		LEFT JOIN resources r ON r.id = p.resource_id
@@ -245,6 +248,7 @@ func (s *rolePermService) GetRoleGroupByResource() ([]rolepermdto.GroupedResourc
 	}
 
 	return result, nil
+
 }
 
 // Hàm lấy phân quyền theo ID người dùng

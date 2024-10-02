@@ -18,11 +18,12 @@ type AppConfig struct {
 }
 
 type DatabaseConfig struct {
-	Host         string
-	Port         int
-	Name         string
-	User         string
-	Password     string
+	Host     string
+	Port     int
+	Name     string
+	User     string
+	Password string
+	Schema   string
 	SSLMode      string
 	MaxConns     int
 	MaxIdleConns int
@@ -31,7 +32,7 @@ type DatabaseConfig struct {
 
 type JWTConfig struct {
 	Secret      string
-	TokenExpiry int
+	TokenExpiry int "mapstructure:\"token_expiry\""
 }
 type RedisConfig struct {
 	Host     string

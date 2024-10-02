@@ -62,15 +62,8 @@ Demo call procedure with cursor
 	}
 */
 
-func ExecProcCursor[T any](procedureName string, paramsStruct interface{}) ([]T, error) {
+func ExecProcCursor[T any](pool *pgxpool.Pool, procedureName string, paramsStruct interface{}) ([]T, error) {
 	ctx := context.Background()
-	// Sử dụng connection pool thay vì kết nối đơn
-	pool, err := connectToDBPool(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %w", err)
-	}
-	defer pool.Close()
-
 	args, cursorName, err := extractParams(paramsStruct)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract parameters: %w", err)
@@ -133,18 +126,20 @@ func ExecProcCursor[T any](procedureName string, paramsStruct interface{}) ([]T,
 	return results, nil
 }
 
-func connectToDBPool(ctx context.Context) (*pgxpool.Pool, error) {
+func ConnectToDBPool() (*pgxpool.Pool, error) {
 	connInfo, err := config.LoadConfig()
+	ctx := context.Background()
 
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-	connString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
+	connString := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Ho_Chi_Minh search_path=%s",
 		connInfo.Database.Host,
 		connInfo.Database.User,
 		connInfo.Database.Password,
 		connInfo.Database.Name,
 		connInfo.Database.Port,
+		connInfo.Database.Schema,
 	)
 
 	config, err := pgxpool.ParseConfig(connString)

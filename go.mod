@@ -5,6 +5,7 @@ go 1.22
 toolchain go1.23.1
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/wire v0.5.0
 	github.com/spf13/viper v1.10.1

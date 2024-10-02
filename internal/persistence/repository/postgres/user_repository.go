@@ -28,3 +28,11 @@ func (r *UserRepository) FindByEmail(email string) (*entity.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *UserRepository) FindByUsername(username string) (*entity.User, error) {
+	var user entity.User
+	if err := r.Where("username = ?", username).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

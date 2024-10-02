@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +17,9 @@ func NewGenericBaseRepository[T any](db *gorm.DB) *GenericBaseRepository[T] {
 
 // Create thêm một bản ghi mới vào database
 func (r *GenericBaseRepository[T]) Create(entity *T) error {
+	var currentSearchPath string
+	r.db.Raw("SHOW search_path").Scan(&currentSearchPath)
+	fmt.Println("Current search path:", currentSearchPath)
 	return r.db.Create(entity).Error
 }
 

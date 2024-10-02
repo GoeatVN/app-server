@@ -5,9 +5,10 @@ app:
 database:
   host: "51.79.212.76"
   port: 15432
-  name: "vcs"
+  name: "postgres"
   user: "postgres"
   password: "kD9gdhQh"
+  schema: "demovcs"
   maxConns: 10
   maxIdleConns: 5
   minConns: 5
@@ -17,6 +18,7 @@ redis:
   password: ""
   db: 0
 
+
 email:
   smtp_host: "smtp.gmail.com"
   smtp_port: 587
@@ -24,4 +26,4 @@ email:
   password: "your-email-password"
 jwt:
   secret: "Acb@123456"
-  token_expiry: 3600
+  token_expiry: 180 # minutes

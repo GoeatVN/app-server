@@ -4,7 +4,7 @@ import (
 	"app-server/internal/domain/enum"
 	"app-server/internal/infrastructure/config"
 	"app-server/internal/infrastructure/middleware"
-	"app-server/internal/interface/api/handler/v1"
+	v1 "app-server/internal/interface/api/handler/v1"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
 	"fmt"
@@ -13,22 +13,36 @@ import (
 )
 
 type HTTPServer struct {
-	router          *gin.Engine
-	config          *config.Config
-	userHandler     *v1.UserHandler
-	accountHandler  *v1.AccountHandler
-	authService     auth.AuthServiceInterface
-	rolePermService rolepermission.RolePermServiceInterface
-	rolePermHandler *v1.RolePermHandler
+	router              *gin.Engine
+	config              *config.Config
+	userHandler         *v1.UserHandler
+	accountHandler      *v1.AccountHandler
+	rolePermHandler     *v1.RolePermHandler
+	soilAnalysisHandler *v1.SoilAnalysisHandler
+	authService         auth.AuthServiceInterface
+	rolePermService     rolepermission.RolePermServiceInterface
+}
+
+type Handlers struct {
+	UserHandler         *v1.UserHandler
+	AccountHandler      *v1.AccountHandler
+	RolePermHandler     *v1.RolePermHandler
+	SoilAnalysisHandler *v1.SoilAnalysisHandler
+}
+
+type Services struct {
+	AuthService     auth.AuthServiceInterface
+	RolePermService rolepermission.RolePermServiceInterface
 }
 
 func NewHTTPServer(
 	config *config.Config,
-	userHandler *v1.UserHandler,
-	accountHandler *v1.AccountHandler,
-	rolePermHandler *v1.RolePermHandler,
-	authService auth.AuthServiceInterface,
-	rolePermService rolepermission.RolePermServiceInterface,
+	UserHandler *v1.UserHandler,
+	AccountHandler *v1.AccountHandler,
+	RolePermHandler *v1.RolePermHandler,
+	SoilAnalysisHandler *v1.SoilAnalysisHandler,
+	AuthService auth.AuthServiceInterface,
+	RolePermService rolepermission.RolePermServiceInterface,
 	// redisCache *cache.RedisCache,
 ) *HTTPServer {
 	router := gin.Default()
@@ -42,22 +56,15 @@ func NewHTTPServer(
 	// Đăng ký middleware caching và chuẩn hóa kết quả trả về
 	//router.Use(middleware.CachingMiddleware(s.redisCache, 10*time.Minute)) // Cache trong 10 phút
 
-	// Áp dụng middleware Authorization để giới hạn quyền truy cập cho vai trò "admin"
-	// adminGroup := router.Group("/admin")
-	// adminGroup.Use(middleware.AuthorizationMiddleware("admin"))
-	// adminGroup.GET("/users", s.userHandler.GetUsers)
-
-	// // Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
-	// router.POST("/users", s.userHandler.CreateUser)
-
 	server := &HTTPServer{
-		router:          router,
-		config:          config,
-		userHandler:     userHandler,
-		accountHandler:  accountHandler,
-		authService:     authService,
-		rolePermService: rolePermService,
-		rolePermHandler: rolePermHandler,
+		router:              router,
+		config:              config,
+		userHandler:         UserHandler,
+		accountHandler:      AccountHandler,
+		authService:         AuthService,
+		rolePermService:     RolePermService,
+		rolePermHandler:     RolePermHandler,
+		soilAnalysisHandler: SoilAnalysisHandler,
 	}
 
 	server.setupRoutes()
@@ -90,6 +97,11 @@ func (s *HTTPServer) setupRoutes() {
 		api.POST("/roles/asign-role", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Add, enum.Action.Update), s.rolePermHandler.AssignRoleToUser)
 
 		// Add other routes as needed
+	}
+	// Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
+	apiAnonymos := s.router.Group("/api")
+	{
+		apiAnonymos.POST("/soil-analysis", s.soilAnalysisHandler.AddNewSoilAnalysis)
 	}
 }
 

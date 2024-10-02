@@ -8,13 +8,15 @@ import (
 	"app-server/internal/infrastructure/config"
 	"app-server/internal/infrastructure/database"
 	"app-server/internal/infrastructure/server"
-	"app-server/internal/interface/api/handler/v1"
+	v1 "app-server/internal/interface/api/handler/v1"
 	"app-server/internal/persistence/repository"
 	"app-server/internal/persistence/repository/postgres"
 	"app-server/internal/usecase/account"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
+	"app-server/internal/usecase/soil_analysis"
 	"app-server/internal/usecase/user"
+
 	"github.com/google/wire"
 	"gorm.io/gorm"
 )
@@ -65,9 +67,11 @@ func InitializeServer(config *config.Config) (*server.HTTPServer, error) {
 		auth.NewAuthService,               // Inject AuthService
 		account.NewAccountService,         // Inject AccountService
 		rolepermission.NewRolePermService, // Inject RolePermService
-		v1.NewUserHandler,                 // Inject UserHandler
+		soil_analysis.NewSoilAnalysisServiceInterface,
+		v1.NewUserHandler, // Inject UserHandler
 		v1.NewAccountHandler,
 		v1.NewRolePermHandler,
+		v1.NewSoilAnalysisHandler,
 		server.NewHTTPServer,
 	)
 	return &server.HTTPServer{}, nil

@@ -17,8 +17,8 @@ func (User) TableName() string {
 
 type Role struct {
 	ID       uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	RoleName string `json:"role_name"`
-	RoleCode string `json:"role_code"`
+	RoleName string `json:"roleName"`
+	RoleCode string `json:"roleCode"`
 	BaseEntity
 }
 
@@ -28,8 +28,8 @@ func (Role) TableNameRole() string {
 
 type Resource struct {
 	ID           uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	ResourceName string `json:"resource_name"`
-	ResourceCode string `json:"resource_code"`
+	ResourceName string `json:"resourceName"`
+	ResourceCode string `json:"resourceCode"`
 	BaseEntity
 }
 
@@ -39,8 +39,8 @@ func (Resource) TableName() string {
 
 type Action struct {
 	ID         uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	ActionName string `json:"action_name"`
-	ActionCode string `json:"action_code"`
+	ActionName string `json:"actionName"`
+	ActionCode string `json:"actionCode"`
 	BaseEntity
 }
 
@@ -50,10 +50,10 @@ func (Action) TableName() string {
 
 type Permission struct {
 	ID             uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	PermissionName string `json:"permission_name"`
-	PermissionCode string `json:"permission_code"`
-	ResourceID     uint   `json:"resource_id"`
-	ActionID       uint   `json:"action_id"`
+	PermissionName string `json:"permissionName"`
+	PermissionCode string `json:"permissionCode"`
+	ResourceID     uint   `json:"resourceId"`
+	ActionID       uint   `json:"actionId"`
 	BaseEntity
 }
 
@@ -62,8 +62,8 @@ func (Permission) TableName() string {
 }
 
 type UserRole struct {
-	UserID uint `json:"user_id"`
-	RoleID uint `json:"role_id"`
+	UserID uint `json:"userId"`
+	RoleID uint `json:"roleId"`
 	BaseEntity
 }
 
@@ -72,8 +72,8 @@ func (UserRole) TableNameUserRole() string {
 }
 
 type RolePermission struct {
-	RoleID       uint `json:"role_id"`
-	PermissionID uint `json:"permission_id"`
+	RoleID       uint `json:"roleId"`
+	PermissionID uint `json:"permissionId"`
 	BaseEntity
 }
 
@@ -83,8 +83,8 @@ func (RolePermission) TableName() string {
 
 // Struct Claims chứa thông tin của người dùng và các quyền
 type AuthClaims struct {
-	UserID   uint   `json:"user_id"`
-	RoleIDs  []uint `json:"role_ids"`
+	UserID   uint   `json:"userId"`
+	RoleIDs  []uint `json:"roleIds"`
 	Username string `json:"username"`
 	jwt.StandardClaims
 }

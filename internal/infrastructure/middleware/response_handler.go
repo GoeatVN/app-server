@@ -12,11 +12,11 @@ func ResponseHandlerMiddleware() gin.HandlerFunc {
 		c.Next()
 
 		// Kiểm tra xem có lỗi xảy ra trong quá trình xử lý không
-		if len(c.Errors) > 0 {
-			// Xử lý tất cả các lỗi trả về
-			response.Error(c, c.Writer.Status(), "INTERNAL_ERROR", c.Errors.String())
-			return
-		}
+		//if len(c.Errors) > 0 {
+		//	// Xử lý tất cả các lỗi trả về
+		//	response.Error(c, c.Writer.Status(), "INTERNAL_ERROR", c.Errors.String())
+		//	return
+		//}
 
 		// Nếu không có lỗi, chuẩn hóa phản hồi thành công (nếu có)
 		if data, exists := c.Get("response_data"); exists {

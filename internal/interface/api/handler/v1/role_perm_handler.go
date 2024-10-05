@@ -88,7 +88,7 @@ func (h *RolePermHandler) GetRolePermsById(c *gin.Context) {
 	c.Set("response_data", perms)
 }
 
-func (h *RolePermHandler) GetRoleGroupByResource(c *gin.Context) {
+func (h *RolePermHandler) GetResources(c *gin.Context) {
 	perms, err := h.rolePermService.GetRoleGroupByResource()
 	if err != nil {
 		c.Error(err)

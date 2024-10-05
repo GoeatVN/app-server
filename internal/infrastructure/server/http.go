@@ -37,6 +37,7 @@ func NewHTTPServer(
 	router.Use(middleware.LoggerMiddleware()) // Ghi log
 	//router.Use(middleware.AuthMiddleware())            // Xác thực token
 	router.Use(middleware.RateLimiterMiddleware())     // Giới hạn số lượng yêu cầu từ một IP
+	router.Use(middleware.CORS())                      // Xử lý CORS
 	router.Use(middleware.ErrorHandler())              // Xử lý lỗi phát sinh
 	router.Use(middleware.ResponseHandlerMiddleware()) // Chuẩn hóa kết quả trả về
 	// Đăng ký middleware caching và chuẩn hóa kết quả trả về
@@ -66,6 +67,7 @@ func NewHTTPServer(
 }
 
 func (s *HTTPServer) setupRoutes() {
+
 	// Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
 	s.router.POST("/api/account/login", s.accountHandler.Login)
 
@@ -82,7 +84,7 @@ func (s *HTTPServer) setupRoutes() {
 		api.POST("/users/:id/modify", authMiddleware.AuthZ(enum.Resource.User, enum.Action.Update), s.userHandler.UpdateUser)
 		api.GET("/users/:id/perms", authMiddleware.AuthZ(enum.Resource.User, enum.Action.View), s.rolePermHandler.GetPermsByUserID)
 
-		api.GET("/roles/group-by-resource", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetRoleGroupByResource)
+		api.GET("/resources", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetResources)
 		api.GET("/roles", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetAllRolePerms)
 		api.GET("/roles/:id", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.View), s.rolePermHandler.GetRolePermsById)
 		api.POST("/roles/add", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Add, enum.Action.Update), s.rolePermHandler.AddNewRole)

@@ -12,8 +12,8 @@ import (
 
 var (
 	rateLimiters = make(map[string]*rate.Limiter)
-	rateLimit    = 5           // Số lượng yêu cầu tối đa
-	burstLimit   = 2           // Số lượng yêu cầu bùng phát tối đa
+	rateLimit    = 1000        // Số lượng yêu cầu tối đa
+	burstLimit   = 10          // Số lượng yêu cầu bùng phát tối đa
 	rateDuration = time.Minute // Thời gian giới hạn
 )
 

@@ -101,7 +101,7 @@ func (s *HTTPServer) setupRoutes() {
 	// Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
 	apiAnonymos := s.router.Group("/api")
 	{
-		apiAnonymos.POST("/soil-analysis", s.soilAnalysisHandler.AddNewSoilAnalysis)
+		apiAnonymos.POST("/soil-analysis", s.soilAnalysisHandler.SaveSoilAnalysis)
 	}
 }
 

@@ -18,7 +18,7 @@ func NewSoilAnalysisHandler(soilAnalysisService soil_analysis.SoilAnalysisServic
 }
 
 // Login handles user login
-func (h *SoilAnalysisHandler) AddNewSoilAnalysis(c *gin.Context) {
+func (h *SoilAnalysisHandler) SaveSoilAnalysis(c *gin.Context) {
 
 	var request analysis_model.SoilAnalysisRequest
 
@@ -27,7 +27,7 @@ func (h *SoilAnalysisHandler) AddNewSoilAnalysis(c *gin.Context) {
 		return
 	}
 
-	soilAnalysisResponse, err := h.soilAnalysisService.AddNewAnalysis(request)
+	soilAnalysisResponse, err := h.soilAnalysisService.SaveSoilAnalysis(request)
 	if err != nil {
 		c.Error(err)
 		return

@@ -29,24 +29,31 @@ func (s *SoilAnalysisService) SaveSoilAnalysis(soilAnalysisRequest analysis_mode
 		log.Fatal(err)
 	}
 	fmt.Println(string(jsonData))
-	// Prepare variables to receive results
-	var result *string
-	var errorCode string
-	var errorMessage string
 
-	// Call stored procedure
-	err = s.db.Raw("CALL save_soil_analysis_data(?, ?, ?, ?)",
-		string(jsonData), &result, &errorCode, &errorMessage).Error
+	// Cấu trúc để lưu kết quả của các INOUT parameters
+	type ProcedureResult struct {
+		p_result        string
+		p_error_code    string
+		p_error_message string
+	}
+	var result ProcedureResult
+
+	// Chuẩn bị câu lệnh SQL để gọi stored procedure
+	query := `CALL demovcs.save_soil_analysis_data(?, ?, ?, ?)`
+
+	// Thực thi câu lệnh SQL với tham số JSON và nhận kết quả từ INOUT parameters
+	err = s.db.Raw(query, string(jsonData), result.p_result, result.p_error_code, result.p_error_message).Scan(&result).Error
 	if err != nil {
-		log.Fatal(err)
+		return false, err
 	}
 
+	fmt.Printf("Result: %s\n,", result.p_result)
 	// Check results
 
-	if errorCode != "" {
-		fmt.Printf("Operation failed. Error code: %s, Error message: %s\n", errorCode, errorMessage)
+	if result.p_error_code != "" {
+		fmt.Printf("Operation failed. Error code: %s, Error message: %s\n", result.p_error_code, result.p_error_message)
 
-		return false, fmt.Errorf("operation failed. Error code: %s, Error message: %s", errorCode, errorMessage)
+		return false, fmt.Errorf("operation failed. Error code: %s, Error message: %s", result.p_error_code, result.p_error_message)
 	}
 	return true, nil
 }

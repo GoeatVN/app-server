@@ -12,6 +12,7 @@ type APIResponse struct {
 	Failed     bool        `json:"Failed"`
 	Errors     []Errors    `json:"errors"`
 	Data       interface{} `json:"data"`
+	TotalRow   int         `json:"totalRow",omitempty`
 }
 
 // Error định nghĩa lỗi trong APIResponse

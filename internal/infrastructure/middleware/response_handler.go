@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"app-server/internal/shared/constants"
 	"app-server/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -19,7 +20,8 @@ func ResponseHandlerMiddleware() gin.HandlerFunc {
 		// }
 
 		// Nếu không có lỗi, chuẩn hóa phản hồi thành công (nếu có)
-		if data, exists := c.Get("response_data"); exists {
+
+		if data, exists := c.Get(constants.RESPONSE_DATA_KEY); exists {
 			response.Success(c, data)
 		}
 	}

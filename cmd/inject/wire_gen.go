@@ -17,8 +17,8 @@ import (
 	"app-server/internal/usecase/account"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
-	"app-server/internal/usecase/system"
 	"app-server/internal/usecase/soil_analysis"
+	"app-server/internal/usecase/system"
 	"app-server/internal/usecase/user"
 	"gorm.io/gorm"
 )
@@ -49,12 +49,11 @@ func InitializeServer(config2 *config.Config) (*server.HTTPServer, error) {
 	genericBaseRepository5 := provideActionRepo(db)
 	rolePermServiceInterface := rolepermission.NewRolePermService(userRepository, genericBaseRepository, repositoryGenericBaseRepository, genericBaseRepository2, genericBaseRepository3, genericBaseRepository4, genericBaseRepository5, db, pool)
 	rolePermHandler := v1.NewRolePermHandler(rolePermServiceInterface)
-	systemServiceInterface := system.NewComboboxService(pool, db)
-	systemHandler := v1.NewSystemHandler(systemServiceInterface)
-
 	soilAnalysisServiceInterface := soil_analysis.NewSoilAnalysisServiceInterface(db)
 	soilAnalysisHandler := v1.NewSoilAnalysisHandler(soilAnalysisServiceInterface)
-	httpServer := server.NewHTTPServer(config2, userHandler, accountHandler, rolePermHandler, soilAnalysisHandler, authServiceInterface, rolePermServiceInterface)
+	systemServiceInterface := system.NewComboboxService(pool, db)
+	systemHandler := v1.NewSystemHandler(systemServiceInterface)
+	httpServer := server.NewHTTPServer(config2, userHandler, accountHandler, rolePermHandler, soilAnalysisHandler, authServiceInterface, rolePermServiceInterface, systemHandler)
 	return httpServer, nil
 }
 

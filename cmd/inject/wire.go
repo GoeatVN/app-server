@@ -14,7 +14,6 @@ import (
 	"app-server/internal/usecase/account"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
-	"app-server/internal/usecase/system"
 	"app-server/internal/usecase/user"
 	"github.com/google/wire"
 	"gorm.io/gorm"
@@ -66,11 +65,14 @@ func InitializeServer(config *config.Config) (*server.HTTPServer, error) {
 		auth.NewAuthService,               // Inject AuthService
 		account.NewAccountService,         // Inject AccountService
 		rolepermission.NewRolePermService, // Inject RolePermService
+		soil_analysis.NewSoilAnalysisServiceInterface,
+		v1.NewUserHandler, // Inject UserHandler
 		system.NewComboboxService,         // Inject SystemService
 		v1.NewUserHandler,                 // Inject UserHandler
 		v1.NewAccountHandler,
 		v1.NewRolePermHandler,
 		v1.NewSystemHandler, // Inject SystemHandler
+		v1.NewSoilAnalysisHandler,
 		server.NewHTTPServer,
 	)
 	return &server.HTTPServer{}, nil

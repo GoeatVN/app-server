@@ -9,8 +9,10 @@ import (
 // APIResponse định nghĩa phản hồi chuẩn cho API
 type APIResponse struct {
 	HttpStatus string      `json:"status"`
-	Errors     []Errors    `json:"errors,omitempty"`
-	Data       interface{} `json:"data,omitempty"`
+	Failed     bool        `json:"Failed"`
+	Errors     []Errors    `json:"errors"`
+	Data       interface{} `json:"data"`
+	TotalRow   int         `json:"totalRow",omitempty`
 }
 
 // Error định nghĩa lỗi trong APIResponse
@@ -23,7 +25,9 @@ type Errors struct {
 func Success(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, APIResponse{
 		HttpStatus: http.StatusText(http.StatusOK),
+		Failed:     false,
 		Data:       data,
+		Errors:     nil,
 	})
 }
 
@@ -31,12 +35,14 @@ func Success(c *gin.Context, data interface{}) {
 func Error(c *gin.Context, statusCode int, code, message string) {
 	c.JSON(statusCode, APIResponse{
 		HttpStatus: http.StatusText(statusCode),
+		Failed:     true,
 		Errors: []Errors{
 			{
 				Code:    code,
 				Message: message,
 			},
 		},
+		Data: nil,
 	})
 }
 
@@ -44,11 +50,13 @@ func Error(c *gin.Context, statusCode int, code, message string) {
 func ValidationError(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, APIResponse{
 		HttpStatus: http.StatusText(http.StatusBadRequest),
+		Failed:     true,
 		Errors: []Errors{
 			{
 				Code:    "VALIDATION_ERROR",
 				Message: err.Error(),
 			},
 		},
+		Data: nil,
 	})
 }

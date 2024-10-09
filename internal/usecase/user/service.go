@@ -59,7 +59,7 @@ func (s *service) CreateUser(request *userdto.AddUserRequest) (string, error) {
 		hashedPassword,
 		request.Email,
 		request.Phone,
-		request.Fullname,
+		request.FullName,
 		request.CreatedBy,
 		&isSuccess,
 		&errorCode,

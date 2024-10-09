@@ -7,11 +7,10 @@ import (
 	"app-server/internal/interface/api/handler/v1"
 	"app-server/internal/usecase/auth"
 	"app-server/internal/usecase/rolepermission"
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
+// Update the HTTPServer struct
 type HTTPServer struct {
 	router          *gin.Engine
 	config          *config.Config
@@ -20,8 +19,10 @@ type HTTPServer struct {
 	authService     auth.AuthServiceInterface
 	rolePermService rolepermission.RolePermServiceInterface
 	rolePermHandler *v1.RolePermHandler
+	systemHandler   *v1.SystemHandler // Add SystemHandler
 }
 
+// Update the NewHTTPServer function
 func NewHTTPServer(
 	config *config.Config,
 	userHandler *v1.UserHandler,
@@ -29,27 +30,16 @@ func NewHTTPServer(
 	rolePermHandler *v1.RolePermHandler,
 	authService auth.AuthServiceInterface,
 	rolePermService rolepermission.RolePermServiceInterface,
-	// redisCache *cache.RedisCache,
+	systemHandler *v1.SystemHandler, // Add SystemHandler
 ) *HTTPServer {
 	router := gin.Default()
 
-	// Đăng ký các middleware
-	router.Use(middleware.LoggerMiddleware()) // Ghi log
-	//router.Use(middleware.AuthMiddleware())            // Xác thực token
-	router.Use(middleware.RateLimiterMiddleware())     // Giới hạn số lượng yêu cầu từ một IP
-	router.Use(middleware.CORS())                      // Xử lý CORS
-	router.Use(middleware.ErrorHandler())              // Xử lý lỗi phát sinh
-	router.Use(middleware.ResponseHandlerMiddleware()) // Chuẩn hóa kết quả trả về
-	// Đăng ký middleware caching và chuẩn hóa kết quả trả về
-	//router.Use(middleware.CachingMiddleware(s.redisCache, 10*time.Minute)) // Cache trong 10 phút
-
-	// Áp dụng middleware Authorization để giới hạn quyền truy cập cho vai trò "admin"
-	// adminGroup := router.Group("/admin")
-	// adminGroup.Use(middleware.AuthorizationMiddleware("admin"))
-	// adminGroup.GET("/users", s.userHandler.GetUsers)
-
-	// // Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
-	// router.POST("/users", s.userHandler.CreateUser)
+	// Register middleware
+	router.Use(middleware.LoggerMiddleware())
+	router.Use(middleware.RateLimiterMiddleware())
+	router.Use(middleware.CORS())
+	router.Use(middleware.ErrorHandler())
+	router.Use(middleware.ResponseHandlerMiddleware())
 
 	server := &HTTPServer{
 		router:          router,
@@ -59,6 +49,7 @@ func NewHTTPServer(
 		authService:     authService,
 		rolePermService: rolePermService,
 		rolePermHandler: rolePermHandler,
+		systemHandler:   systemHandler, // Initialize SystemHandler
 	}
 
 	server.setupRoutes()
@@ -66,9 +57,9 @@ func NewHTTPServer(
 	return server
 }
 
+// Update the setupRoutes method
 func (s *HTTPServer) setupRoutes() {
-
-	// Route không cần kiểm tra quyền, mọi người dùng đều truy cập được
+	// Public routes
 	s.router.POST("/api/account/login", s.accountHandler.Login)
 
 	// Create middleware auth
@@ -91,10 +82,7 @@ func (s *HTTPServer) setupRoutes() {
 		api.POST("/roles/:id/modify", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Update), s.rolePermHandler.ModifyRole)
 		api.POST("/roles/asign-role", authMiddleware.AuthZ(enum.Resource.Role, enum.Action.Add, enum.Action.Update), s.rolePermHandler.AssignRoleToUser)
 
-		// Add other routes as needed
+		// Add the new route for LoadComboboxData
+		api.POST("/combobox/load", s.systemHandler.LoadComboboxDataHandler)
 	}
-}
-
-func (s *HTTPServer) Run() error {
-	return s.router.Run(fmt.Sprintf(":%d", s.config.App.Port))
 }

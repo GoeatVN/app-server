@@ -49,12 +49,12 @@ func NewRolePermService(userRepo *postgres.UserRepository,
 
 func (s *rolePermService) AddNewRole(request rolepermdto.AddNewRoleRequest) error {
 	// Create the role
-	if err := s.roleRepo.Create(&request.Role); err != nil {
+	if err := s.roleRepo.Create(request.Role); err != nil {
 		return err
 	}
 
 	// Assign permissions to the role
-	for _, permID := range request.PermIDs {
+	for _, permID := range request.Perms {
 		rolePerm := entity.RolePermission{RoleID: request.Role.ID, PermissionID: permID}
 		if err := s.rolePermission.Create(&rolePerm); err != nil {
 			return err
@@ -69,7 +69,7 @@ func (s *rolePermService) ModifyRole(roleId uint, request rolepermdto.ModifyRole
 		return err
 	}
 
-	role.RoleName = request.RoleName
+	role.RoleName = request.Role.RoleName
 
 	if err := s.roleRepo.Update(role); err != nil {
 		return err
@@ -87,7 +87,7 @@ func (s *rolePermService) ModifyRole(roleId uint, request rolepermdto.ModifyRole
 	}
 
 	// Insert new permissions
-	for _, permID := range request.PermIDs {
+	for _, permID := range request.Perms {
 		if !existingPermIDs[permID] {
 			rolePerm := entity.RolePermission{RoleID: roleId, PermissionID: permID}
 			if err := s.rolePermission.Create(&rolePerm); err != nil {

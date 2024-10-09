@@ -5,6 +5,7 @@ type AddUserRequest struct {
 	Password  string `json:"password" binding:"required" validate:"required" message:"Password is required."`
 	Email     string `json:"email" binding:"required" validate:"required,email" message:"Email is required and must be valid."`
 	Phone     string `json:"phone" binding:"required" validate:"required" message:"Phone number is required."`
-	Fullname  string `json:"fullname" binding:"required" validate:"required" message:"Full name is required."`
+	FullName  string `json:"fullName" binding:"required" validate:"required" message:"Full name is required."`
+	Status    string `json:"status" binding:"required" validate:"required" message:"Status is required."`
 	CreatedBy string `json:"-"`
 }

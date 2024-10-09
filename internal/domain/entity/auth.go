@@ -8,6 +8,8 @@ type User struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Phone    string `json:"phone"`
+	FullName string `gorm:"column:full_name" json:"fullName"`
+	Status   string `json:"status"`
 	BaseEntity
 }
 

@@ -3,13 +3,11 @@ package rolepermdto
 import "app-server/internal/domain/entity"
 
 type AddNewRoleRequest struct {
-	Role    entity.Role `json:"role"`
-	PermIDs []uint      `json:"perm_ids"`
+	GetRolePermsResponse
 }
 
 type ModifyRoleRequest struct {
-	RoleName string `json:"role_name"`
-	PermIDs  []uint `json:"perm_ids"`
+	GetRolePermsResponse
 }
 
 type AssignRoleToUserRequest struct {
@@ -19,7 +17,7 @@ type AssignRoleToUserRequest struct {
 
 type GetRolePermsResponse struct {
 	Role  *entity.Role `json:"role"`
-	Perms []uint       `json:"perm"`
+	Perms []uint       `json:"perms"`
 }
 
 type GroupedResourcesReponse struct {

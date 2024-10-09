@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"app-server/internal/shared/constants"
 	"app-server/internal/shared/rolepermdto"
 	"app-server/internal/usecase/rolepermission"
 	"app-server/pkg/response"
@@ -27,7 +28,7 @@ func (h *RolePermHandler) AddNewRole(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", "Role added successfully")
+	c.Set(constants.RESPONSE_DATA_KEY, "Role added successfully")
 }
 
 // ModifyRole handles modifying a role
@@ -47,7 +48,7 @@ func (h *RolePermHandler) ModifyRole(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", "Role modified successfully")
+	c.Set(constants.RESPONSE_DATA_KEY, "Role modified successfully")
 }
 
 // AssignRoleToUser handles assigning roles to a user
@@ -61,7 +62,7 @@ func (h *RolePermHandler) AssignRoleToUser(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", "Role assigned successfully")
+	c.Set(constants.RESPONSE_DATA_KEY, "Role assigned successfully")
 }
 
 func (h *RolePermHandler) GetAllRolePerms(c *gin.Context) {
@@ -70,7 +71,7 @@ func (h *RolePermHandler) GetAllRolePerms(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", perms)
+	c.Set(constants.RESPONSE_DATA_KEY, perms)
 }
 
 func (h *RolePermHandler) GetRolePermsById(c *gin.Context) {
@@ -85,7 +86,7 @@ func (h *RolePermHandler) GetRolePermsById(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", perms)
+	c.Set(constants.RESPONSE_DATA_KEY, perms)
 }
 
 func (h *RolePermHandler) GetResources(c *gin.Context) {
@@ -94,7 +95,7 @@ func (h *RolePermHandler) GetResources(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", perms)
+	c.Set(constants.RESPONSE_DATA_KEY, perms)
 }
 
 func (h *RolePermHandler) GetPermsByUserID(c *gin.Context) {
@@ -111,5 +112,5 @@ func (h *RolePermHandler) GetPermsByUserID(c *gin.Context) {
 		c.Error(err)
 		return
 	}
-	c.Set("response_data", perms)
+	c.Set(constants.RESPONSE_DATA_KEY, perms)
 }

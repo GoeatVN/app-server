@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"app-server/internal/shared/constants"
 	"app-server/internal/shared/login"
 	"app-server/internal/usecase/account"
 	"app-server/pkg/response"
@@ -32,5 +33,5 @@ func (h *AccountHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.Set("response_data", loginResponse)
+	c.Set(constants.RESPONSE_DATA_KEY, loginResponse)
 }

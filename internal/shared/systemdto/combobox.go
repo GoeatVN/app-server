@@ -14,10 +14,6 @@ type ComboboxRequestItem struct {
 	Param3    string    `json:"param3"`
 }
 
-type ComboboxRequest struct {
-	Data []ComboboxRequestItem `json:"data"`
-}
-
 type ComboboxDto struct {
 	ID     int    `json:"id"`
 	Name   string `json:"text"`
@@ -28,10 +24,6 @@ type ComboboxDto struct {
 }
 
 type ComboboxResponseItem struct {
-	Data      []ComboboxDto `json:"data"`
 	ComboType ComboType     `json:"comboType"`
-}
-
-type ComboboxResponse struct {
-	Data []ComboboxResponseItem `json:"data"`
+	ComboData []ComboboxDto `json:"comboData"`
 }

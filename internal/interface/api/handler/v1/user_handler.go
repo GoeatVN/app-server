@@ -2,6 +2,7 @@ package v1
 
 import (
 	"app-server/internal/domain/entity"
+	"app-server/internal/shared/constants"
 	"app-server/internal/shared/userdto"
 	"app-server/internal/usecase/user"
 	"app-server/internal/utils"
@@ -29,7 +30,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 		return
 	}
 	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
-	c.Set("response_data", users)
+	c.Set(constants.RESPONSE_DATA_KEY, users)
 }
 
 // lấy thông tin người dùng theo id
@@ -51,7 +52,7 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 		return
 	}
 	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
-	c.Set("response_data", user)
+	c.Set(constants.RESPONSE_DATA_KEY, user)
 }
 
 // Tạo người dùng mới
@@ -79,7 +80,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
-	c.Set("response_data", message)
+	c.Set(constants.RESPONSE_DATA_KEY, message)
 }
 
 // Cập nhật thông tin người dùng
@@ -97,5 +98,5 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 	// Đặt dữ liệu phản hồi vào context để ResponseHandlerMiddleware xử lý
-	c.Set("response_data", user)
+	c.Set(constants.RESPONSE_DATA_KEY, user)
 }

@@ -7,7 +7,7 @@ import (
 )
 
 type SystemServiceInterface interface {
-	LoadComboboxData(request systemdto.ComboboxRequest) (*systemdto.ComboboxResponse, error)
+	LoadComboboxData(comboList []systemdto.ComboboxRequestItem) (*[]systemdto.ComboboxResponseItem, error)
 }
 
 type systemService struct {
@@ -19,19 +19,19 @@ func NewComboboxService(dbPool *pgxpool.Pool, db *gorm.DB) SystemServiceInterfac
 	return &systemService{dbPool: dbPool, db: db}
 }
 
-func (s *systemService) LoadComboboxData(request systemdto.ComboboxRequest) (*systemdto.ComboboxResponse, error) {
-	var response systemdto.ComboboxResponse
-	for _, req := range request.Data {
+func (s *systemService) LoadComboboxData(comboList []systemdto.ComboboxRequestItem) (*[]systemdto.ComboboxResponseItem, error) {
+	var response []systemdto.ComboboxResponseItem
+	for _, req := range comboList {
 		switch req.ComboType {
 		case systemdto.AllRole:
-			dataResponseWrapper, err := s.GetAllRoleCombo(req)
+			dataResponseItem, err := s.GetAllRoleCombo(req)
 			if err != nil {
 				return nil, err
 			}
-			response.Data = append(response.Data, *dataResponseWrapper)
+			response = append(response, *dataResponseItem)
 		}
 	}
-	return nil, nil
+	return &response, nil
 }
 
 func (s *systemService) GetAllRoleCombo(requestParam systemdto.ComboboxRequestItem) (*systemdto.ComboboxResponseItem, error) {
@@ -44,7 +44,7 @@ func (s *systemService) GetAllRoleCombo(requestParam systemdto.ComboboxRequestIt
 		return nil, err
 	}
 	var dataResponseItem systemdto.ComboboxResponseItem
-	dataResponseItem.Data = append(dataResponseItem.Data, dto)
+	dataResponseItem.ComboData = append(dataResponseItem.ComboData, dto)
 	dataResponseItem.ComboType = requestParam.ComboType
 	return &dataResponseItem, nil
 }

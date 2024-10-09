@@ -9,7 +9,7 @@ import (
 // APIResponse định nghĩa phản hồi chuẩn cho API
 type APIResponse struct {
 	HttpStatus string      `json:"status"`
-	Failed     bool        `json:"Failed"`
+	Failed     bool        `json:"isFailed"`
 	Errors     []Errors    `json:"errors"`
 	Data       interface{} `json:"data"`
 	TotalRow   int         `json:"totalRow",omitempty`
